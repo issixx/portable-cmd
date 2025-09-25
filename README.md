@@ -122,6 +122,8 @@ code .\
 
 - To install Python modules:
   - Install using `python -m pip install <module>`.
+- To create a venv environment with portable Python:
+  - Run `python -m virtualenv <venv-name>`
 
 - To use system tools:
   - Set `set USE_SYSTEM_EXE=1` to use already installed tools that are in the PATH.
