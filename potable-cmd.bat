@@ -26,6 +26,7 @@ if "%ENABLE_CHROME%"      equ "" set ENABLE_CHROME=0
 if "%ENABLE_FFMPEG%"      equ "" set ENABLE_FFMPEG=0
 if "%ENABLE_NODEJS%"      equ "" set ENABLE_NODEJS=0
 if "%ENABLE_GO%"          equ "" set ENABLE_GO=0
+if "%ENABLE_SVN%"         equ "" set ENABLE_SVN=0
 
 ::###################################################################################
 :: workspace settings
@@ -58,9 +59,9 @@ if "%VULKAN_URL%"             equ "" set VULKAN_URL=https://sdk.lunarg.com/sdk/d
 if "%POTABLE_CHROME_URL%"     equ "" set POTABLE_CHROME_URL=https://storage.googleapis.com/chrome-for-testing-public/138.0.7204.168/win64/chrome-win64.zip
 if "%POTABLE_CHROME_DRIVER_URL%" equ "" set POTABLE_CHROME_DRIVER_URL=https://storage.googleapis.com/chrome-for-testing-public/138.0.7204.168/win64/chromedriver-win64.zip
 if "%POTABLE_FFMPEG_URL%"     equ "" set POTABLE_FFMPEG_URL=https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip
-if "%POTABLE_NODEJS_URL%"     equ "" set POTABLE_NODEJS_URL=https://nodejs.org/download/release/latest-v20.x/node-v20.19.5-win-x64.zip
+if "%POTABLE_NODEJS_URL%"     equ "" set POTABLE_NODEJS_URL=POTABLE_NODEJS_URL=https://nodejs.org/download/release/v22.19.0/node-v22.19.0-win-x64.zip
 if "%POTABLE_GO_URL%"         equ "" set POTABLE_GO_URL=https://go.dev/dl/go1.25.1.windows-amd64.zip
-::if "%POTABLE_NODEJS_URL%"     equ "" set POTABLE_NODEJS_URL=https://nodejs.org/dist/v22.18.0/node-v22.18.0-win-x64.zip
+if "%POTABLE_SVN_URL%"        equ "" set POTABLE_SVN_URL=https://www.visualsvn.com/files/Apache-Subversion-1.14.5-3.zip
 
 ::###################################################################################
 :: etc settings
@@ -143,6 +144,11 @@ if "%ENABLE_GO%" equ "1" (
     if ERRORLEVEL 1 goto :ERROR
 )
 
+if "%ENABLE_SVN%" equ "1" (
+    call :ACTIVATE_SVN
+    if ERRORLEVEL 1 goto :ERROR
+)
+
 goto :SUCCESS
 :ERROR
     echo ################################
@@ -189,14 +195,14 @@ exit /b 0
     :: output exe path and version
     echo %EXE_CMD% used is located at "%FIRST_LINE%"
     if "%VER_OPTION%" neq "" (
-        %EXE_CMD% %VER_OPTION%
+        %*
     )
 exit /b 0
 
 :: find installed exe
 :FIND_SYSTEM_EXE
     if "%USE_SYSTEM_EXE%" neq "1" exit /b 1
-    call :WHERE_EXE %1 %2
+    call :WHERE_EXE %*
     if ERRORLEVEL 1 exit /b 1
 exit /b 0
 
@@ -752,6 +758,63 @@ exit /b 0
     )
     
     echo ##### go installed
+exit /b 0
+
+::###################################################################################
+:: svn
+::###################################################################################
+
+:ACTIVATE_SVN
+    echo;
+    echo ##### checking installed svn...
+    for %%A in ("%POTABLE_SVN_URL:/=" "%") do set "POTABLE_SVN_FILENAME=%%~nxA"
+    set POTABLE_SVN_DL=%LIB_DIR%\%POTABLE_SVN_FILENAME%
+    set POTABLE_SVN_ROOT=%LIB_DIR%\svn
+
+    :: check already installed potable svn
+    call :FIND_SYSTEM_EXE svn --version --quiet
+    if ERRORLEVEL 1 (
+	    if not exist "%POTABLE_SVN_ROOT%\bin\svn.exe" (
+	        echo svn is not installed
+
+	        :: install potable svn
+	        call :INSTALL_SVN
+	        if ERRORLEVEL 1 exit /b 1
+	    )
+	    :: append potable svn path
+	    set "PATH=%POTABLE_SVN_ROOT%\bin;%PATH%"
+
+	    :: output nodejs path and version
+	    call :WHERE_EXE svn --version --quiet
+	    if ERRORLEVEL 1 exit /b 1
+    )
+    
+    set ACTIVE_SVN=1
+exit /b 0
+
+:INSTALL_SVN
+    echo ##### downloading potable svn...
+    curl -L %POTABLE_SVN_URL% -o "%POTABLE_SVN_DL%"
+    if ERRORLEVEL 1 (
+        echo %POTABLE_SVN_URL% download failed
+        exit /b 1
+    )
+    echo ##### installing potable svn...
+    :: unzip
+    powershell -Command "Expand-Archive -Path '%POTABLE_SVN_DL%' -DestinationPath '%LIB_DIR%\svn'"
+    if ERRORLEVEL 1 (
+        echo %POTABLE_SVN_DL% unzip failed
+        exit /b 1
+    )
+
+    :: delete dl file
+	del "%POTABLE_SVN_DL%"
+    if ERRORLEVEL 1 (
+        echo %POTABLE_SVN_DL% delete failed
+        exit /b 1
+    )
+    
+    echo ##### svn installed
 exit /b 0
 
 ::###################################################################################
