@@ -12,7 +12,7 @@ potable-cmd.bat
 ```
 or Download & Execute
 ```bash
-curl -L -o "potable-cmd.bat" "https://raw.githubusercontent.com/issixx/potable-cmd/main/potable-cmd.bat" && call potable-cmd.bat
+powershell -NoProfile -Command "$f='potable-cmd.bat'; (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/issixx/potable-cmd/main/potable-cmd.bat') -replace \"`r?`n\",\"`r`n\" | Set-Content $f -Encoding ASCII; cmd /k $f"
 ```
 
 After execution, the paths for the installed portable versions will be configured.
