@@ -26,6 +26,7 @@ After execution, the paths for the installed portable versions will be configure
 - **FFmpeg**:
 - **Node.js**:
 - **Go**:
+- **Svn**:
 
 ## System Installation SDKs
 - **CUDA Toolkit**: Downloads installer and installs after user confirmation (interactive)
@@ -43,7 +44,8 @@ After execution, the paths for the installed portable versions will be configure
 │       ├─ chrome
 │       ├─ ffmpeg
 │       ├─ nodejs
-│       └─ go
+│       ├─ go
+│       └─ svn
 └─ requirements.txt  ← (Optional) Python package list
 ```
 - `workspace` is created under the execution directory (`%~dp0`).
