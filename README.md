@@ -105,8 +105,9 @@ set POTABLE_PYTHON_REQUIREMENT_MODULES=blinker==1.7.0 selenium-wire==5.1.0 selen
 set POTABLE_CHROME_URL=https://storage.googleapis.com/chrome-for-testing-public/138.0.7204.168/win64/chrome-win64.zip
 set POTABLE_CHROME_DRIVER_URL=https://storage.googleapis.com/chrome-for-testing-public/138.0.7204.168/win64/chromedriver-win64.zip
 set POTABLE_FFMPEG_URL=https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip
-set POTABLE_NODEJS_URL=https://nodejs.org/download/release/latest-v20.x/node-v20.19.5-win-x64.zip
+set POTABLE_NODEJS_URL=https://nodejs.org/download/release/v22.19.0/node-v22.19.0-win-x64.zip
 set POTABLE_GO_URL=https://go.dev/dl/go1.25.1.windows-amd64.zip
+set POTABLE_SVN_URL=https://www.visualsvn.com/files/Apache-Subversion-1.14.5-3.zip
 
 set CUDA_URL=https://developer.download.nvidia.com/compute/cuda/12.6.2/local_installers/cuda_12.6.2_560.94_windows.exe
 set VULKAN_URL=https://sdk.lunarg.com/sdk/download/1.3.296.0/windows/VulkanSDK-1.3.296.0-Installer.exe
