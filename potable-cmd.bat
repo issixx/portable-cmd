@@ -846,6 +846,8 @@ exit /b 0
 
         :: append potable python path
         set "PATH=%POTABLE_PYTHON_ROOT%\Scripts;%POTABLE_PYTHON_ROOT%;%PATH%"
+        :: disable user site-packages
+        set PYTHONNOUSERSITE=1
         
         :: output python path and version
         call :WHERE_EXE python --version
