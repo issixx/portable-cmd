@@ -660,6 +660,9 @@ exit /b 0
 	    :: append potable nodejs path
 	    set "PATH=%POTABLE_NODEJS_ROOT%;%PATH%"
 
+	    :: Change the security policy to allow npm to run
+	    powershell Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+
 	    :: output nodejs path and version
 	    call :WHERE_EXE npm --version
 	    if ERRORLEVEL 1 exit /b 1
@@ -727,7 +730,7 @@ exit /b 0
 	    :: append potable go path
 	    set "PATH=%POTABLE_GO_ROOT%\bin;%PATH%"
 
-	    :: output nodejs path and version
+	    :: output go path and version
 	    call :WHERE_EXE go version
 	    if ERRORLEVEL 1 exit /b 1
     )
@@ -784,7 +787,7 @@ exit /b 0
 	    :: append potable svn path
 	    set "PATH=%POTABLE_SVN_ROOT%\bin;%PATH%"
 
-	    :: output nodejs path and version
+	    :: output svn path and version
 	    call :WHERE_EXE svn --version --quiet
 	    if ERRORLEVEL 1 exit /b 1
     )
