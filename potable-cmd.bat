@@ -18,15 +18,23 @@ chcp 65001 > NUL
 :: Set to 1 to enable each feature
 if "%ENABLE_GIT%"         equ "" set ENABLE_GIT=1
 if "%ENABLE_CMAKE%"       equ "" set ENABLE_CMAKE=0
-if "%ENABLE_PYTHON%"      equ "" set ENABLE_PYTHON=1
-if "%ENABLE_PYTHON_VENV%" equ "" set ENABLE_PYTHON_VENV=0
+if "%ENABLE_UV%"          equ "" set ENABLE_UV=1
 if "%ENABLE_CUDA%"        equ "" set ENABLE_CUDA=0
 if "%ENABLE_VULKAN%"      equ "" set ENABLE_VULKAN=0
 if "%ENABLE_CHROME%"      equ "" set ENABLE_CHROME=0
 if "%ENABLE_FFMPEG%"      equ "" set ENABLE_FFMPEG=0
 if "%ENABLE_NODEJS%"      equ "" set ENABLE_NODEJS=0
 if "%ENABLE_GO%"          equ "" set ENABLE_GO=0
+if "%ENABLE_BUN%"         equ "" set ENABLE_BUN=0
 if "%ENABLE_SVN%"         equ "" set ENABLE_SVN=0
+
+:: Old python setup method
+if "%ENABLE_PYTHON%"      equ "" set ENABLE_PYTHON=0
+if "%ENABLE_PYTHON_VENV%" equ "" set ENABLE_PYTHON_VENV=0
+if "%POTABLE_PYTHON_REQUIREMENT_MODULES_BASE%" equ "" set POTABLE_PYTHON_REQUIREMENT_MODULES_BASE=
+if "%POTABLE_PYTHON_REQUIREMENT_MODULES_DEFAULT%" equ "" set POTABLE_PYTHON_REQUIREMENT_MODULES_DEFAULT=
+::if "%POTABLE_NODEJS_REQUIREMENT_MODULES%" equ "" set POTABLE_NODEJS_REQUIREMENT_MODULES=
+::if "%POTABLE_BUN_REQUIREMENT_MODULES%" equ "" set POTABLE_BUN_REQUIREMENT_MODULES=
 
 ::###################################################################################
 :: workspace settings
@@ -42,7 +50,7 @@ if "%WORKSPACE_ROOT%"       equ "" set WORKSPACE_ROOT=%WORKSPACE_ROOT_DEFAULT%
 :: Use this shorter path if %WORKSPACE_ROOT% is too long and causes build failures
 if "%WORKSPACE_SHORT_ROOT%" equ "" set WORKSPACE_SHORT_ROOT=%USERPROFILE%\%BASE_DIR_NAME%\%WORKSPACE_NAME%
 if "%LIB_DIR_NAME%"         equ "" set LIB_DIR_NAME=lib
-if "%PYTHON_VENV_DIR_NAME%" equ "" set PYTHON_VENV_DIR_NAME=venv
+if "%PYTHON_VENV_DIR_NAME%" equ "" set PYTHON_VENV_DIR_NAME=.venv
 
 ::###################################################################################
 :: installer settings
@@ -50,17 +58,20 @@ if "%PYTHON_VENV_DIR_NAME%" equ "" set PYTHON_VENV_DIR_NAME=venv
 if "%POTABLE_GIT_URL%"        equ "" set POTABLE_GIT_URL=https://github.com/git-for-windows/git/releases/download/v2.47.0.windows.2/PortableGit-2.47.0.2-64-bit.7z.exe
 ::if "%POTABLE_CMAKE_URL%"    equ "" set POTABLE_CMAKE_URL=https://github.com/Kitware/CMake/releases/download/v3.30.5/cmake-3.30.5-windows-x86_64.zip
 if "%POTABLE_CMAKE_URL%"      equ "" set POTABLE_CMAKE_URL=https://github.com/Kitware/CMake/releases/download/v3.28.6/cmake-3.28.6-windows-x86_64.zip
+::if "%POTABLE_UV_URL%"         equ "" set POTABLE_UV_URL=https://github.com/astral-sh/uv/releases/latest/download/uv-x86_64-pc-windows-msvc.zip
+if "%POTABLE_UV_URL%"         equ "" set POTABLE_UV_URL=https://github.com/astral-sh/uv/releases/download/0.10.7/uv-x86_64-pc-windows-msvc.zip
+if "%POTABLE_UV_PY_VER%"      equ "" set POTABLE_UV_PY_VER=3.12.9
 ::if "%POTABLE_PYTHON_URL%"   equ "" set POTABLE_PYTHON_URL=https://www.python.org/ftp/python/3.13.0/python-3.13.0-embed-amd64.zip
 if "%POTABLE_PYTHON_URL%"     equ "" set POTABLE_PYTHON_URL=https://www.python.org/ftp/python/3.12.9/python-3.12.9-embed-amd64.zip
 if "%POTABLE_PYTHON_PIP_URL%" equ "" set POTABLE_PYTHON_PIP_URL=https://bootstrap.pypa.io/get-pip.py
-::if "%POTABLE_PYTHON_REQUIREMENT_MODULES%" equ "" set POTABLE_PYTHON_REQUIREMENT_MODULES=uv
 if "%CUDA_URL%"               equ "" set CUDA_URL=https://developer.download.nvidia.com/compute/cuda/12.6.2/local_installers/cuda_12.6.2_560.94_windows.exe
 if "%VULKAN_URL%"             equ "" set VULKAN_URL=https://sdk.lunarg.com/sdk/download/1.3.296.0/windows/VulkanSDK-1.3.296.0-Installer.exe
 if "%POTABLE_CHROME_URL%"     equ "" set POTABLE_CHROME_URL=https://storage.googleapis.com/chrome-for-testing-public/138.0.7204.168/win64/chrome-win64.zip
 if "%POTABLE_CHROME_DRIVER_URL%" equ "" set POTABLE_CHROME_DRIVER_URL=https://storage.googleapis.com/chrome-for-testing-public/138.0.7204.168/win64/chromedriver-win64.zip
 if "%POTABLE_FFMPEG_URL%"     equ "" set POTABLE_FFMPEG_URL=https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip
-if "%POTABLE_NODEJS_URL%"     equ "" set POTABLE_NODEJS_URL=POTABLE_NODEJS_URL=https://nodejs.org/download/release/v22.19.0/node-v22.19.0-win-x64.zip
+if "%POTABLE_NODEJS_URL%"     equ "" set POTABLE_NODEJS_URL=https://nodejs.org/download/release/v22.19.0/node-v22.19.0-win-x64.zip
 if "%POTABLE_GO_URL%"         equ "" set POTABLE_GO_URL=https://go.dev/dl/go1.25.1.windows-amd64.zip
+if "%POTABLE_BUN_URL%"        equ "" set POTABLE_BUN_URL=https://github.com/oven-sh/bun/releases/latest/download/bun-windows-x64.zip
 if "%POTABLE_SVN_URL%"        equ "" set POTABLE_SVN_URL=https://www.visualsvn.com/files/Apache-Subversion-1.14.5-3.zip
 
 ::###################################################################################
@@ -106,6 +117,11 @@ if "%ENABLE_CMAKE%" equ "1" (
     if ERRORLEVEL 1 goto :ERROR
 )
 
+if "%ENABLE_UV%" equ "1" (
+    call :ACTIVATE_UV
+    if ERRORLEVEL 1 goto :ERROR
+)
+
 if "%ENABLE_PYTHON%" equ "1" (
     call :ACTIVATE_PYTHON
     if ERRORLEVEL 1 goto :ERROR
@@ -144,11 +160,17 @@ if "%ENABLE_GO%" equ "1" (
     if ERRORLEVEL 1 goto :ERROR
 )
 
+if "%ENABLE_BUN%" equ "1" (
+    call :ACTIVATE_BUN
+    if ERRORLEVEL 1 goto :ERROR
+)
+
 if "%ENABLE_SVN%" equ "1" (
     call :ACTIVATE_SVN
     if ERRORLEVEL 1 goto :ERROR
 )
 
+echo.
 goto :SUCCESS
 :ERROR
     echo ################################
@@ -161,10 +183,11 @@ exit /b 1
     echo ##################################
     echo #   potable-cmd launch success   #
     echo ##################################
+    echo.
     
     :: Switch to interactive mode if the script is called directly
     :: (Check if this batch filename is included in the startup command)
-    echo %CMDCMDLINE:"=% | find /I "%~f0"
+    echo %CMDCMDLINE:"=% | find /I "%~f0" >nul
     if not ERRORLEVEL 1 (
         cmd /K
     )
@@ -327,12 +350,13 @@ exit /b 1
     for %%A in ("%POTABLE_GIT_URL:/=" "%") do set "POTABLE_GIT_FILENAME=%%~nxA"
     set POTABLE_GIT_DL=%LIB_DIR%\%POTABLE_GIT_FILENAME%
     set POTABLE_GIT_ROOT=%LIB_DIR%\git
+    set POTABLE_GIT_CMD=%POTABLE_GIT_ROOT%\bin\git.exe
 
     :: find system git
     call :FIND_SYSTEM_EXE git --version
     if ERRORLEVEL 1 (
         :: check already installed potable git
-        if not exist "%POTABLE_GIT_ROOT%\bin\git.exe" (
+        if not exist "%POTABLE_GIT_CMD%" (
             echo git is not installed
 
             :: install potable git
@@ -442,6 +466,415 @@ exit /b 0
         exit /b 1
     )
     echo ##### cmake installed
+exit /b 0
+
+::###################################################################################
+:: uv
+::###################################################################################
+
+:ACTIVATE_UV
+    echo;
+    echo ##### checking installed uv...
+    for %%A in ("%POTABLE_UV_URL:/=" "%") do set "POTABLE_UV_FILENAME=%%~nxA"
+    set POTABLE_UV_DL=%LIB_DIR%\%POTABLE_UV_FILENAME%
+    set POTABLE_UV_ROOT=%LIB_DIR%\uv
+
+    :: check already installed potable uv
+    call :FIND_SYSTEM_EXE uv --version
+    if ERRORLEVEL 1 (
+        if not exist "%POTABLE_UV_ROOT%\uv.exe" (
+            echo uv is not installed
+
+            :: install potable uv
+            call :INSTALL_UV
+            if ERRORLEVEL 1 exit /b 1
+        ) else (
+            :: append potable uv path
+            set "PATH=%POTABLE_UV_ROOT%;%PATH%"
+        )
+
+        :: output uv path and version
+        call :WHERE_EXE uv --version
+        if ERRORLEVEL 1 exit /b 1
+    )
+
+    :: initialize uv project
+    if not exist "pyproject.toml" (
+        :: Create .venv and pyproject.toml
+        uv init --bare --python %POTABLE_UV_PY_VER%
+        if ERRORLEVEL 1 exit /b 1
+
+        :: Create .python-version. (Fix python version)
+        uv python pin %POTABLE_UV_PY_VER%
+        if ERRORLEVEL 1 exit /b 1
+    )
+    
+    :: update modules
+    if exist "pyproject.toml" (
+        uv sync
+    )
+
+    :: activate venv
+    if exist ".venv\Scripts\activate.bat" (
+        call ".venv\Scripts\activate.bat"
+        if ERRORLEVEL 1 exit /b 1
+    )
+    
+    set ACTIVE_UV=1
+exit /b 0
+
+:INSTALL_UV
+    echo ##### downloading potable uv...
+    curl -L %POTABLE_UV_URL% -o "%POTABLE_UV_DL%"
+    if ERRORLEVEL 1 (
+        echo %POTABLE_UV_URL% download failed
+        exit /b 1
+    )
+    
+    echo ##### installing potable uv...
+    :: unzip
+    powershell -Command "Expand-Archive -Path '%POTABLE_UV_DL%' -DestinationPath '%POTABLE_UV_ROOT%'"
+    if ERRORLEVEL 1 (
+        echo %POTABLE_UV_DL% unzip failed
+        exit /b 1
+    )
+    
+    :: delete dl file
+    del "%POTABLE_UV_DL%"
+    if ERRORLEVEL 1 (
+        echo %POTABLE_UV_DL% delete failed
+        exit /b 1
+    )
+    
+    set "PATH=%POTABLE_UV_ROOT%;%PATH%"
+    
+    echo ##### uv installed
+exit /b 0
+
+::###################################################################################
+:: python
+::###################################################################################
+
+:ACTIVATE_PYTHON
+    echo;
+    echo ##### checking installed python...
+    for %%A in ("%POTABLE_PYTHON_URL:/=" "%") do set "POTABLE_PYTHON_FILENAME=%%~nxA"
+    set POTABLE_PYTHON_DL=%LIB_DIR%\%POTABLE_PYTHON_FILENAME%
+    set POTABLE_PYTHON_ROOT=%LIB_DIR%\python
+    set POTABLE_PYTHON_CMD=%POTABLE_PYTHON_ROOT%\python.exe
+    ::set VENV_DIR=%WORKSPACE_ROOT%\%PYTHON_VENV_DIR_NAME%
+    set VENV_DIR=%CUR_DIR%%PYTHON_VENV_DIR_NAME%
+
+    :: find system python
+    call :FIND_SYSTEM_EXE python --version
+    if ERRORLEVEL 1 (
+        :: check already installed potable python
+        if not exist "%POTABLE_PYTHON_CMD%" (
+            echo ##### python is not installed
+
+            :: install potable python
+            call :INSTALL_PYTHON
+            if ERRORLEVEL 1 exit /b 1
+
+            set SETUPED_PYTHON=1
+        )
+
+        :: append potable python path
+        set "PATH=%POTABLE_PYTHON_ROOT%\Scripts;%POTABLE_PYTHON_ROOT%;%PATH%"
+        :: disable user site-packages
+        set PYTHONNOUSERSITE=1
+        
+        :: output python path and version
+        call :WHERE_EXE python --version
+        if ERRORLEVEL 1 exit /b 1
+    )
+    
+    :: activate venv
+    if "%ENABLE_PYTHON_VENV%" equ "1" (
+        call :ACTIVATE_PYTHON_VENV
+        if ERRORLEVEL 1 exit /b 1
+    )
+    
+    :: install required python module if setuped python or venv
+    if "%SETUPED_PYTHON%%SETUPED_VENV%" neq "" (
+        call :INSTALL_REQUIRED_PYTHON_MODULE
+        if ERRORLEVEL 1 exit /b 1
+    )
+    :: Check and install for new module
+    if exist "%CUR_DIR%requirements.txt" (
+        python -m pip install -r requirements.txt -q
+        if ERRORLEVEL 1 exit /b 1
+    )
+    
+    set ACTIVE_PYTHON=1
+exit /b 0
+
+:INSTALL_PYTHON
+    echo ##### downloading potable ython...
+    curl -L %POTABLE_PYTHON_URL% -o "%POTABLE_PYTHON_DL%"
+    if ERRORLEVEL 1 (
+        echo %POTABLE_PYTHON_URL% download failed
+        exit /b 1
+    )
+    echo ##### installing potable python...
+    :: unzip
+    powershell -Command "Expand-Archive -Path '%POTABLE_PYTHON_DL%' -DestinationPath '%POTABLE_PYTHON_ROOT%'"
+    if ERRORLEVEL 1 (
+        echo %POTABLE_PYTHON_DL% unzip failed
+        exit /b 1
+    )
+
+    :: delete dl file
+	del "%POTABLE_PYTHON_DL%"
+    if ERRORLEVEL 1 (
+        echo %POTABLE_PYTHON_DL% delete failed
+        exit /b 1
+    )
+    
+    echo ## enabling 'site' module...
+    :: find pythonXXX._pth. and replace '#import site' to 'import site'
+    for /r "%POTABLE_PYTHON_ROOT%" %%f in (python*._pth) do (
+    	powershell "&{(Get-Content '%%f') -creplace '#import site', 'import site' | Set-Content '%%f' }"
+        if ERRORLEVEL 1 (
+            echo '%%f' replace failed
+            exit /b 1
+        )
+    )
+    
+    :: add current directory to sys.path
+    echo import sys; sys.path.append('') >> "%POTABLE_PYTHON_ROOT%\current.pth"
+
+    echo ## downloading pip...
+    curl -sSL "%POTABLE_PYTHON_PIP_URL%" -o "%POTABLE_PYTHON_ROOT%\get-pip.py"
+    if ERRORLEVEL 1 (
+        echo %POTABLE_PYTHON_PIP_URL% download failed
+        exit /b 1
+    )
+    
+    echo ## installing pip...
+	"%POTABLE_PYTHON_CMD%" "%POTABLE_PYTHON_ROOT%\get-pip.py" --no-warn-script-location
+    if ERRORLEVEL 1 (
+        echo pip install failed
+        exit /b 1
+    )
+    
+    echo ## installing virtualenv...
+    "%POTABLE_PYTHON_CMD%" -m pip install virtualenv --no-warn-script-location
+    if ERRORLEVEL 1 (
+        echo virtualenv install failed
+        exit /b 1
+    )
+
+    echo ##### python installed
+exit /b 0
+
+:ACTIVATE_PYTHON_VENV
+    :: check venv directory and activate venv
+    if exist "%VENV_DIR%\" (
+        call "%VENV_DIR%\Scripts\activate.bat"
+        if ERRORLEVEL 1 exit /b 1
+        exit /b 0
+    )
+
+    echo ##### venv directory not found.
+    echo ## creating python venv...
+
+    :: check venv module (python standard module)
+    "%POTABLE_PYTHON_CMD%" -c "import venv" >nul 2>&1
+    if ERRORLEVEL 1 (
+        :: use virtualenv (installed virtualenv module)
+        "%POTABLE_PYTHON_CMD%" -m virtualenv "%VENV_DIR%"
+        if ERRORLEVEL 1 (
+            echo virtualenv create failed
+            exit /b 1
+        )
+    ) else (
+        :: use venv (python standard module)
+        "%POTABLE_PYTHON_CMD%" -m venv "%VENV_DIR%"
+        if ERRORLEVEL 1 (
+            echo venv create failed
+            exit /b 1
+        )
+    )
+
+    set SETUPED_VENV=1
+
+    :: activate venv
+    call "%VENV_DIR%\Scripts\activate.bat"
+    if ERRORLEVEL 1 exit /b 1
+exit /b 0
+
+:INSTALL_REQUIRED_PYTHON_MODULE
+    echo ## installing required modules...
+    if "%POTABLE_PYTHON_REQUIREMENT_MODULES_BASE%" neq "" (
+        python -m pip install %POTABLE_PYTHON_REQUIREMENT_MODULES_BASE%
+        if ERRORLEVEL 1 exit /b 1
+    )
+    if "%POTABLE_PYTHON_REQUIREMENT_MODULES_DEFAULT%" neq "" (
+        python -m pip install %POTABLE_PYTHON_REQUIREMENT_MODULES_DEFAULT%
+        if ERRORLEVEL 1 exit /b 1
+
+        :: install Playwright Chromium if playwright is in requirement modules
+        echo %POTABLE_PYTHON_REQUIREMENT_MODULES_DEFAULT% | findstr /i "playwright" >nul
+        if not ERRORLEVEL 1 (
+            echo ## installing Playwright Chromium...
+            python -m playwright install chromium
+            if ERRORLEVEL 1 exit /b 1
+        )
+    )
+    if exist "%CUR_DIR%requirements.txt" (
+        python -m pip install -r requirements.txt
+        if ERRORLEVEL 1 exit /b 1
+    )
+exit /b 0
+
+
+::###################################################################################
+:: CUDA Toolkit
+::###################################################################################
+
+:ACTIVATE_CUDA
+    echo;
+    echo ##### checking installed CUDA Toolkit...
+    for %%A in ("%CUDA_URL:/=" "%") do set "CUDA_FILENAME=%%~nxA"
+    set CUDA_DL=%LIB_DIR%\%CUDA_FILENAME%
+
+    :: check installed CUDA Toolkit
+    if exist "%CUDA_PATH%\bin\nvcc.exe" (
+        echo CUDA Toolkit is installed.
+        set ACTIVE_CUDA=1
+        exit /b 0
+    )
+    echo CUDA Toolkit is not installed.
+    echo;
+    echo Do you want to install CUDA Toolkit?
+    echo ^(CUDA will not be built if not installed CUDA Toolkit.^)
+    set /p INPUT=[y/n]:
+    if /I "%INPUT%" neq "y" (
+        echo CUDA Toolkit was not installed.
+        exit /b 0
+    )
+    
+    :: install cuda Toolkit
+    call :INSTALL_CUDA
+    if ERRORLEVEL 1 exit /b 1
+    
+    set ACTIVE_CUDA=1
+exit /b 0
+
+:INSTALL_CUDA
+    echo ##### downloading CUDA Toolkit...
+    curl -L %CUDA_URL% -o "%CUDA_DL%"
+    if ERRORLEVEL 1 (
+        echo %CUDA_URL% download failed
+        exit /b 1
+    )
+    echo ##### installing CUDA Toolkit...
+    :: silent install.
+    :: echo Please wait until the installation is complete. This may take some time.
+	:: "%CUDA_DL%" -s
+    start /wait "" "%CUDA_DL%"
+    if ERRORLEVEL 1 (
+        echo %CUDA_DL% install failed
+        exit /b 1
+    )
+
+    :: delete dl file
+	del "%CUDA_DL%"
+    if ERRORLEVEL 1 (
+        echo %CUDA_DL% delete failed
+        exit /b 1
+    )
+
+    :: Update the "CUDA_*" environment variable without restarting the command prompt
+    call :UPDATE_SYSTEM_ENVS CUDA_
+
+    :: check installed cuda Toolkit
+    if not exist "%CUDA_PATH%\bin\nvcc.exe" (
+        echo CUDA Toolkit install failed
+        exit /b 1
+    )
+
+    :: Update PATH without restarting the command prompt
+    set "PATH=%CUDA_PATH%\libnvvp;%PATH%"
+    set "PATH=%CUDA_PATH%\bin;%PATH%"
+    
+    echo CUDA Toolkit installed
+exit /b 0
+
+::###################################################################################
+:: Vulkan SDK
+::###################################################################################
+
+:ACTIVATE_VULKAN
+    echo;
+    echo ##### checking installed Vulkan SDK...
+    for %%A in ("%VULKAN_URL:/=" "%") do set "VULKAN_FILENAME=%%~nxA"
+    set VULKAN_DL=%LIB_DIR%\%VULKAN_FILENAME%
+
+    :: check installed Vulkan SDK
+    if exist "%VULKAN_SDK%\Bin\glslc.exe" (
+        echo Vulkan SDK is installed.
+        set ACTIVE_VULKAN=1
+        exit /b 0
+    )
+
+    echo Vulkan SDK is not installed.
+    echo;
+    echo Do you want to install Vulkan SDK?
+    echo ^(Vulkan will not be built if not installed Vulkan SDK.^)
+    echo ^(If installing, Only the Core installation configuration is required. The default settings are fine.^)
+    set /p INPUT=[y/n]:
+    if /I "%INPUT%" neq "y" (
+        echo Vulkan SDK was not installed.
+        exit /b 0
+    )
+    
+    :: install Vulkan SDK
+    call :INSTALL_VULKAN
+    if ERRORLEVEL 1 exit /b 1
+    
+    set ACTIVE_VULKAN=1
+exit /b 0
+
+:INSTALL_VULKAN
+    echo ##### downloading Vulkan SDK...
+    curl -L %VULKAN_URL% -o "%VULKAN_DL%"
+    if ERRORLEVEL 1 (
+        echo %VULKAN_URL% download failed
+        exit /b 1
+    )
+    echo ##### installing Vulkan SDK...
+    :: silent install.
+    :: echo Please wait until the installation is complete. This may take some time.
+	:: "%VULKAN_DL%" -s
+    start /wait "" "%VULKAN_DL%"
+    if ERRORLEVEL 1 (
+        echo %VULKAN_DL% install failed
+        exit /b 1
+    )
+
+    :: delete dl file
+	del "%VULKAN_DL%"
+    if ERRORLEVEL 1 (
+        echo %VULKAN_DL% delete failed
+        exit /b 1
+    )
+
+    :: Update the "VK_SDK_PATH" and "VULKAN_SDK" environment variable without restarting the command prompt
+    call :UPDATE_SYSTEM_ENV VK_SDK_PATH
+    call :UPDATE_SYSTEM_ENV VULKAN_SDK
+
+    :: check installed Vulkan SDK
+    if not exist "%VULKAN_SDK%\Bin\glslc.exe" (
+        echo Vulkan SDK install failed
+        exit /b 1
+    )
+
+    :: Update PATH without restarting the command prompt
+    set "PATH=%VULKAN_SDK%\Bin;%PATH%"
+    
+    echo Vulkan SDK installed
 exit /b 0
 
 ::###################################################################################
@@ -656,16 +1089,18 @@ exit /b 0
 	        :: install potable nodejs
 	        call :INSTALL_NODEJS
 	        if ERRORLEVEL 1 exit /b 1
+	    ) else (
+		    :: append potable nodejs path
+		    set "PATH=%POTABLE_NODEJS_ROOT%;%PATH%"
 	    )
-	    :: append potable nodejs path
-	    set "PATH=%POTABLE_NODEJS_ROOT%;%PATH%"
-
-	    :: Change the security policy to allow npm to run
-	    powershell Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
 
 	    :: output nodejs path and version
 	    call :WHERE_EXE npm --version
 	    if ERRORLEVEL 1 exit /b 1
+    )
+
+    if exist "%CUR_DIR%opencode.json" (
+        set "OPENCODE_CONFIG=%CUR_DIR%opencode.json"
     )
     
     set ACTIVE_NODEJS=1
@@ -703,6 +1138,19 @@ exit /b 0
         echo %LIB_DIR%\%_DL_NAME% rename failed
         exit /b 1
     )
+    
+    set "PATH=%POTABLE_NODEJS_ROOT%;%PATH%"
+    
+    if "%POTABLE_NODEJS_REQUIREMENT_MODULES%" neq "" (
+        call npm install %POTABLE_NODEJS_REQUIREMENT_MODULES%
+        if ERRORLEVEL 1 exit /b 1
+    )
+    
+    if exist "%CUR_DIR%package.json" (
+        call npm install
+        if ERRORLEVEL 1 exit /b 1
+    )
+    
     echo ##### nodejs installed
 exit /b 0
 
@@ -730,7 +1178,7 @@ exit /b 0
 	    :: append potable go path
 	    set "PATH=%POTABLE_GO_ROOT%\bin;%PATH%"
 
-	    :: output go path and version
+	    :: output nodejs path and version
 	    call :WHERE_EXE go version
 	    if ERRORLEVEL 1 exit /b 1
     )
@@ -764,6 +1212,106 @@ exit /b 0
 exit /b 0
 
 ::###################################################################################
+:: bun
+::###################################################################################
+
+:ACTIVATE_BUN
+    echo;
+    echo ##### checking installed bun...
+    for %%A in ("%POTABLE_BUN_URL:/=" "%") do set "POTABLE_BUN_FILENAME=%%~nxA"
+    set POTABLE_BUN_DL=%LIB_DIR%\%POTABLE_BUN_FILENAME%
+    set POTABLE_BUN_ROOT=%LIB_DIR%\bun
+
+    :: check already installed potable bun
+    call :FIND_SYSTEM_EXE bun --version
+    if ERRORLEVEL 1 (
+        if not exist "%POTABLE_BUN_ROOT%\bun.exe" (
+            echo bun is not installed
+
+            :: install potable bun
+            call :INSTALL_BUN
+            if ERRORLEVEL 1 exit /b 1
+        ) else (
+            :: append potable bun path
+            set "PATH=%POTABLE_BUN_ROOT%;%PATH%"
+        )
+
+        :: output bun path and version
+        call :WHERE_EXE bun --version
+        if ERRORLEVEL 1 exit /b 1
+    )
+    
+    set ACTIVE_BUN=1
+exit /b 0
+
+:INSTALL_BUN
+    echo ##### downloading potable bun...
+    curl -L %POTABLE_BUN_URL% -o "%POTABLE_BUN_DL%"
+    if ERRORLEVEL 1 (
+        echo %POTABLE_BUN_URL% download failed
+        exit /b 1
+    )
+    echo ##### installing potable bun...
+    :: unzip
+    powershell -Command "Expand-Archive -Path '%POTABLE_BUN_DL%' -DestinationPath '%LIB_DIR%'"
+    if ERRORLEVEL 1 (
+        echo %POTABLE_BUN_DL% unzip failed
+        exit /b 1
+    )
+
+    :: delete dl file
+    del "%POTABLE_BUN_DL%"
+    if ERRORLEVEL 1 (
+        echo %POTABLE_BUN_DL% delete failed
+        exit /b 1
+    )
+    
+    :: Extract folder name from full path
+    for %%A in ("%POTABLE_BUN_DL:/=" "%") do set "_DL_NAME=%%~nA"
+    for %%A in ("%POTABLE_BUN_ROOT:\=" "%") do set "_NAME=%%~nA"
+    
+    :: rename
+    ren "%LIB_DIR%\%_DL_NAME%" "%_NAME%"
+    if ERRORLEVEL 1 (
+        echo %LIB_DIR%\%_DL_NAME% rename failed
+        exit /b 1
+    )
+    
+    set "PATH=%POTABLE_BUN_ROOT%;%PATH%"
+    
+    :: ensure bunx exists (bun.exe x wrapper)
+    call :CREATE_BUNX
+    if ERRORLEVEL 1 exit /b 1
+    
+    if "%POTABLE_BUN_REQUIREMENT_MODULES%" neq "" (
+        call %POTABLE_BUN_REQUIREMENT_MODULES%
+        if ERRORLEVEL 1 exit /b 1
+    )
+    
+    echo ##### bun installed
+exit /b 0
+
+:CREATE_BUNX
+    :: Create bunx.cmd next to bun.exe so `bunx ...` works on Windows.
+    :: The official installer does this via `bun.exe completions` (see https://bun.com/install.ps1).
+    if "%POTABLE_BUN_ROOT%" equ "" exit /b 0
+    if not exist "%POTABLE_BUN_ROOT%\bun.exe" exit /b 0
+    if exist "%POTABLE_BUN_ROOT%\bunx.cmd" exit /b 0
+
+    echo ##### creating bunx.cmd shim...
+    > "%POTABLE_BUN_ROOT%\bunx.cmd" (
+        echo @echo off
+        echo "%%~dp0bun.exe" x %%*
+        echo exit /b %%ERRORLEVEL%%
+    )
+
+    if not exist "%POTABLE_BUN_ROOT%\bunx.cmd" (
+        echo bunx.cmd create failed
+        exit /b 1
+    )
+exit /b 0
+
+::###################################################################################
 :: svn
 ::###################################################################################
 
@@ -787,7 +1335,7 @@ exit /b 0
 	    :: append potable svn path
 	    set "PATH=%POTABLE_SVN_ROOT%\bin;%PATH%"
 
-	    :: output svn path and version
+	    :: output nodejs path and version
 	    call :WHERE_EXE svn --version --quiet
 	    if ERRORLEVEL 1 exit /b 1
     )
@@ -804,7 +1352,7 @@ exit /b 0
     )
     echo ##### installing potable svn...
     :: unzip
-    powershell -Command "Expand-Archive -Path '%POTABLE_SVN_DL%' -DestinationPath '%LIB_DIR%\svn'"
+    powershell -Command "Expand-Archive -Path '%POTABLE_SVN_DL%' -DestinationPath '%POTABLE_SVN_ROOT%'"
     if ERRORLEVEL 1 (
         echo %POTABLE_SVN_DL% unzip failed
         exit /b 1
@@ -820,310 +1368,3 @@ exit /b 0
     echo ##### svn installed
 exit /b 0
 
-::###################################################################################
-:: python
-::###################################################################################
-
-:ACTIVATE_PYTHON
-    echo;
-    echo ##### checking installed python...
-    for %%A in ("%POTABLE_PYTHON_URL:/=" "%") do set "POTABLE_PYTHON_FILENAME=%%~nxA"
-    set POTABLE_PYTHON_DL=%LIB_DIR%\%POTABLE_PYTHON_FILENAME%
-    set POTABLE_PYTHON_ROOT=%LIB_DIR%\python
-    set POTABLE_PYTHON_CMD=%POTABLE_PYTHON_ROOT%\python
-    set VENV_DIR=%WORKSPACE_ROOT%\%PYTHON_VENV_DIR_NAME%
-
-    :: find system python
-    call :FIND_SYSTEM_EXE python --version
-    if ERRORLEVEL 1 (
-        :: check already installed potable python
-        if not exist "%POTABLE_PYTHON_ROOT%\python.exe" (
-            echo ##### python is not installed
-
-            :: install potable python
-            call :INSTALL_PYTHON
-            if ERRORLEVEL 1 exit /b 1
-
-            set SETUPED_PYTHON=1
-        )
-
-        :: append potable python path
-        set "PATH=%POTABLE_PYTHON_ROOT%\Scripts;%POTABLE_PYTHON_ROOT%;%PATH%"
-        :: disable user site-packages
-        set PYTHONNOUSERSITE=1
-        
-        :: output python path and version
-        call :WHERE_EXE python --version
-        if ERRORLEVEL 1 exit /b 1
-    )
-    
-    :: activate venv
-    if "%ENABLE_PYTHON_VENV%" equ "1" (
-        call :ACTIVATE_PYTHON_VENV
-        if ERRORLEVEL 1 exit /b 1
-    )
-    
-    :: install required python module if setuped python or venv
-    if "%SETUPED_PYTHON%%SETUPED_VENV%" neq "" (
-        call :INSTALL_REQUIRED_PYTHON_MODULE
-        if ERRORLEVEL 1 exit /b 1
-    )
-    
-    set ACTIVE_PYTHON=1
-exit /b 0
-
-:INSTALL_PYTHON
-    echo ##### downloading potable ython...
-    curl -L %POTABLE_PYTHON_URL% -o "%POTABLE_PYTHON_DL%"
-    if ERRORLEVEL 1 (
-        echo %POTABLE_PYTHON_URL% download failed
-        exit /b 1
-    )
-    echo ##### installing potable python...
-    :: unzip
-    powershell -Command "Expand-Archive -Path '%POTABLE_PYTHON_DL%' -DestinationPath '%POTABLE_PYTHON_ROOT%'"
-    if ERRORLEVEL 1 (
-        echo %POTABLE_PYTHON_DL% unzip failed
-        exit /b 1
-    )
-
-    :: delete dl file
-	del "%POTABLE_PYTHON_DL%"
-    if ERRORLEVEL 1 (
-        echo %POTABLE_PYTHON_DL% delete failed
-        exit /b 1
-    )
-    
-    echo ## enabling 'site' module...
-    :: find pythonXXX._pth. and replace '#import site' to 'import site'
-    for /r "%POTABLE_PYTHON_ROOT%" %%f in (python*._pth) do (
-    	powershell "&{(Get-Content '%%f') -creplace '#import site', 'import site' | Set-Content '%%f' }"
-        if ERRORLEVEL 1 (
-            echo '%%f' replace failed
-            exit /b 1
-        )
-    )
-    
-    :: add current directory to sys.path
-    echo import sys; sys.path.append('') >> "%POTABLE_PYTHON_ROOT%\current.pth"
-
-    echo ## downloading pip...
-    curl -sSL "%POTABLE_PYTHON_PIP_URL%" -o "%POTABLE_PYTHON_ROOT%\get-pip.py"
-    if ERRORLEVEL 1 (
-        echo %POTABLE_PYTHON_PIP_URL% download failed
-        exit /b 1
-    )
-    
-    echo ## installing pip...
-	"%POTABLE_PYTHON_CMD%" "%POTABLE_PYTHON_ROOT%\get-pip.py" --no-warn-script-location
-    if ERRORLEVEL 1 (
-        echo pip install failed
-        exit /b 1
-    )
-    
-    echo ## installing virtualenv...
-    "%POTABLE_PYTHON_CMD%" -m pip install virtualenv --no-warn-script-location
-    if ERRORLEVEL 1 (
-        echo virtualenv install failed
-        exit /b 1
-    )
-
-    echo ##### python installed
-exit /b 0
-
-:ACTIVATE_PYTHON_VENV
-    :: check venv directory and activate venv
-    if exist "%VENV_DIR%\" (
-        call "%VENV_DIR%\Scripts\activate.bat"
-        if ERRORLEVEL 1 exit /b 1
-        exit /b 0
-    )
-
-    echo ##### venv directory not found.
-    echo ## creating python venv...
-
-    :: check venv module (python standard module)
-    "%POTABLE_PYTHON_CMD%" -c "import venv" >nul 2>&1
-    if ERRORLEVEL 1 (
-        :: use virtualenv (installed virtualenv module)
-        "%POTABLE_PYTHON_CMD%" -m virtualenv "%VENV_DIR%"
-        if ERRORLEVEL 1 (
-            echo virtualenv create failed
-            exit /b 1
-        )
-    ) else (
-        :: use venv (python standard module)
-        "%POTABLE_PYTHON_CMD%" -m venv "%VENV_DIR%"
-        if ERRORLEVEL 1 (
-            echo venv create failed
-            exit /b 1
-        )
-    )
-
-    set SETUPED_VENV=1
-
-    :: activate venv
-    call "%VENV_DIR%\Scripts\activate.bat"
-    if ERRORLEVEL 1 exit /b 1
-exit /b 0
-
-:INSTALL_REQUIRED_PYTHON_MODULE
-    echo ## installing required modules...
-    if exist "%CUR_DIR%requirements.txt" (
-        python -m pip install -r requirements.txt
-        if ERRORLEVEL 1 exit /b 1
-    )
-    if "%POTABLE_PYTHON_REQUIREMENT_MODULES%" neq "" (
-        python -m pip install %POTABLE_PYTHON_REQUIREMENT_MODULES%
-        if ERRORLEVEL 1 exit /b 1
-    )
-exit /b 0
-
-
-::###################################################################################
-:: CUDA Toolkit
-::###################################################################################
-
-:ACTIVATE_CUDA
-    echo;
-    echo ##### checking installed CUDA Toolkit...
-    for %%A in ("%CUDA_URL:/=" "%") do set "CUDA_FILENAME=%%~nxA"
-    set CUDA_DL=%LIB_DIR%\%CUDA_FILENAME%
-
-    :: check installed CUDA Toolkit
-    if exist "%CUDA_PATH%\bin\nvcc.exe" (
-        echo CUDA Toolkit is installed.
-        set ACTIVE_CUDA=1
-        exit /b 0
-    )
-    echo CUDA Toolkit is not installed.
-    echo;
-    echo Do you want to install CUDA Toolkit?
-    echo ^(CUDA will not be built if not installed CUDA Toolkit.^)
-    set /p INPUT=[y/n]:
-    if /I "%INPUT%" neq "y" (
-        echo CUDA Toolkit was not installed.
-        exit /b 0
-    )
-    
-    :: install cuda Toolkit
-    call :INSTALL_CUDA
-    if ERRORLEVEL 1 exit /b 1
-    
-    set ACTIVE_CUDA=1
-exit /b 0
-
-:INSTALL_CUDA
-    echo ##### downloading CUDA Toolkit...
-    curl -L %CUDA_URL% -o "%CUDA_DL%"
-    if ERRORLEVEL 1 (
-        echo %CUDA_URL% download failed
-        exit /b 1
-    )
-    echo ##### installing CUDA Toolkit...
-    :: silent install.
-    :: echo Please wait until the installation is complete. This may take some time.
-	:: "%CUDA_DL%" -s
-    start /wait "" "%CUDA_DL%"
-    if ERRORLEVEL 1 (
-        echo %CUDA_DL% install failed
-        exit /b 1
-    )
-
-    :: delete dl file
-	del "%CUDA_DL%"
-    if ERRORLEVEL 1 (
-        echo %CUDA_DL% delete failed
-        exit /b 1
-    )
-
-    :: Update the "CUDA_*" environment variable without restarting the command prompt
-    call :UPDATE_SYSTEM_ENVS CUDA_
-
-    :: check installed cuda Toolkit
-    if not exist "%CUDA_PATH%\bin\nvcc.exe" (
-        echo CUDA Toolkit install failed
-        exit /b 1
-    )
-
-    :: Update PATH without restarting the command prompt
-    set "PATH=%CUDA_PATH%\libnvvp;%PATH%"
-    set "PATH=%CUDA_PATH%\bin;%PATH%"
-    
-    echo CUDA Toolkit installed
-exit /b 0
-
-::###################################################################################
-:: Vulkan SDK
-::###################################################################################
-
-:ACTIVATE_VULKAN
-    echo;
-    echo ##### checking installed Vulkan SDK...
-    for %%A in ("%VULKAN_URL:/=" "%") do set "VULKAN_FILENAME=%%~nxA"
-    set VULKAN_DL=%LIB_DIR%\%VULKAN_FILENAME%
-
-    :: check installed Vulkan SDK
-    if exist "%VULKAN_SDK%\Bin\glslc.exe" (
-        echo Vulkan SDK is installed.
-        set ACTIVE_VULKAN=1
-        exit /b 0
-    )
-
-    echo Vulkan SDK is not installed.
-    echo;
-    echo Do you want to install Vulkan SDK?
-    echo ^(Vulkan will not be built if not installed Vulkan SDK.^)
-    echo ^(If installing, Only the Core installation configuration is required. The default settings are fine.^)
-    set /p INPUT=[y/n]:
-    if /I "%INPUT%" neq "y" (
-        echo Vulkan SDK was not installed.
-        exit /b 0
-    )
-    
-    :: install Vulkan SDK
-    call :INSTALL_VULKAN
-    if ERRORLEVEL 1 exit /b 1
-    
-    set ACTIVE_VULKAN=1
-exit /b 0
-
-:INSTALL_VULKAN
-    echo ##### downloading Vulkan SDK...
-    curl -L %VULKAN_URL% -o "%VULKAN_DL%"
-    if ERRORLEVEL 1 (
-        echo %VULKAN_URL% download failed
-        exit /b 1
-    )
-    echo ##### installing Vulkan SDK...
-    :: silent install.
-    :: echo Please wait until the installation is complete. This may take some time.
-	:: "%VULKAN_DL%" -s
-    start /wait "" "%VULKAN_DL%"
-    if ERRORLEVEL 1 (
-        echo %VULKAN_DL% install failed
-        exit /b 1
-    )
-
-    :: delete dl file
-	del "%VULKAN_DL%"
-    if ERRORLEVEL 1 (
-        echo %VULKAN_DL% delete failed
-        exit /b 1
-    )
-
-    :: Update the "VK_SDK_PATH" and "VULKAN_SDK" environment variable without restarting the command prompt
-    call :UPDATE_SYSTEM_ENV VK_SDK_PATH
-    call :UPDATE_SYSTEM_ENV VULKAN_SDK
-
-    :: check installed Vulkan SDK
-    if not exist "%VULKAN_SDK%\Bin\glslc.exe" (
-        echo Vulkan SDK install failed
-        exit /b 1
-    )
-
-    :: Update PATH without restarting the command prompt
-    set "PATH=%VULKAN_SDK%\Bin;%PATH%"
-    
-    echo Vulkan SDK installed
-exit /b 0
