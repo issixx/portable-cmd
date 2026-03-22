@@ -1,8 +1,8 @@
 # portable-cmd
 
 ## Overview
-`portable-cmd.bat` is a batch file for Windows environments that automatically downloads and extracts **portable** versions of various development tools (Git, CMake, Python, CUDA, Vulkan, etc.) and makes them available by setting up the PATH.
-It allows you to set up development environments with a double-click across different projects and machines without affecting the system, eliminating the hassle of manually installing various essential tools.
+`portable-cmd.bat` is a batch file for Windows environments that launches a command prompt with various tools pre-configured and ready for use just by double-clicking it.
+If not already installed, it automatically downloads and extracts portable versions of development tools (Git, CMake, Python) and adds them to the PATH. This allows you to launch a command prompt in any environment simply by running portable-cmd.bat across different projects or machines, without having to worry about the setup process.
 
 ## How to Run
 
