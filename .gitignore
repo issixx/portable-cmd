@@ -1,2 +1,5 @@
 # workspace directory
 workspace/
+.python-version
+pyproject.toml
+uv.lock
