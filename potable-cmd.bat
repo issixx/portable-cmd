@@ -1,12 +1,12 @@
 :: Copyright 2025 issixx. All Rights Reserved.
 :: Licensed under the MIT License.
-:: Repository: https://github.com/issixx/potable-cmd
+:: Repository: https://github.com/issixx/portable-cmd
 
 @echo off
 
 :: Do nothing if called recursively
-if "%POTABLE_CMD_CALLED%" equ "1" exit /b 0
-set POTABLE_CMD_CALLED=1
+if "%PORTABLE_CMD_CALLED%" equ "1" exit /b 0
+set PORTABLE_CMD_CALLED=1
 
 :: Prevent output from clearing when entering venv
 chcp 65001 > NUL
@@ -28,13 +28,22 @@ if "%ENABLE_GO%"          equ "" set ENABLE_GO=0
 if "%ENABLE_BUN%"         equ "" set ENABLE_BUN=0
 if "%ENABLE_SVN%"         equ "" set ENABLE_SVN=0
 
+:: If even one Windows hard link is in use,
+:: you cannot delete any of the hard links that share the same original file.
+:: For example, if the server is running or VS Code is open
+:: with the .venv still activated, you will not be able to delete
+:: a .venv located in a completely different place.
+:: Therefore, although this sacrifices the advantages of uv's hard links,
+:: we use copy mode to prioritize operational convenience.
+if "%UV_LINK_MODE%"      equ "" set UV_LINK_MODE=copy
+
 :: Old python setup method
 if "%ENABLE_PYTHON%"      equ "" set ENABLE_PYTHON=0
 if "%ENABLE_PYTHON_VENV%" equ "" set ENABLE_PYTHON_VENV=0
-if "%POTABLE_PYTHON_REQUIREMENT_MODULES_BASE%" equ "" set POTABLE_PYTHON_REQUIREMENT_MODULES_BASE=
-if "%POTABLE_PYTHON_REQUIREMENT_MODULES_DEFAULT%" equ "" set POTABLE_PYTHON_REQUIREMENT_MODULES_DEFAULT=
-::if "%POTABLE_NODEJS_REQUIREMENT_MODULES%" equ "" set POTABLE_NODEJS_REQUIREMENT_MODULES=
-::if "%POTABLE_BUN_REQUIREMENT_MODULES%" equ "" set POTABLE_BUN_REQUIREMENT_MODULES=
+if "%PORTABLE_PYTHON_REQUIREMENT_MODULES_BASE%" equ "" set PORTABLE_PYTHON_REQUIREMENT_MODULES_BASE=
+if "%PORTABLE_PYTHON_REQUIREMENT_MODULES_DEFAULT%" equ "" set PORTABLE_PYTHON_REQUIREMENT_MODULES_DEFAULT=
+::if "%PORTABLE_NODEJS_REQUIREMENT_MODULES%" equ "" set PORTABLE_NODEJS_REQUIREMENT_MODULES=
+::if "%PORTABLE_BUN_REQUIREMENT_MODULES%" equ "" set PORTABLE_BUN_REQUIREMENT_MODULES=
 
 ::###################################################################################
 :: workspace settings
@@ -55,24 +64,24 @@ if "%PYTHON_VENV_DIR_NAME%" equ "" set PYTHON_VENV_DIR_NAME=.venv
 ::###################################################################################
 :: installer settings
 ::###################################################################################
-if "%POTABLE_GIT_URL%"        equ "" set POTABLE_GIT_URL=https://github.com/git-for-windows/git/releases/download/v2.47.0.windows.2/PortableGit-2.47.0.2-64-bit.7z.exe
-::if "%POTABLE_CMAKE_URL%"    equ "" set POTABLE_CMAKE_URL=https://github.com/Kitware/CMake/releases/download/v3.30.5/cmake-3.30.5-windows-x86_64.zip
-if "%POTABLE_CMAKE_URL%"      equ "" set POTABLE_CMAKE_URL=https://github.com/Kitware/CMake/releases/download/v3.28.6/cmake-3.28.6-windows-x86_64.zip
-::if "%POTABLE_UV_URL%"         equ "" set POTABLE_UV_URL=https://github.com/astral-sh/uv/releases/latest/download/uv-x86_64-pc-windows-msvc.zip
-if "%POTABLE_UV_URL%"         equ "" set POTABLE_UV_URL=https://github.com/astral-sh/uv/releases/download/0.10.7/uv-x86_64-pc-windows-msvc.zip
-if "%POTABLE_UV_PY_VER%"      equ "" set POTABLE_UV_PY_VER=3.12.9
-::if "%POTABLE_PYTHON_URL%"   equ "" set POTABLE_PYTHON_URL=https://www.python.org/ftp/python/3.13.0/python-3.13.0-embed-amd64.zip
-if "%POTABLE_PYTHON_URL%"     equ "" set POTABLE_PYTHON_URL=https://www.python.org/ftp/python/3.12.9/python-3.12.9-embed-amd64.zip
-if "%POTABLE_PYTHON_PIP_URL%" equ "" set POTABLE_PYTHON_PIP_URL=https://bootstrap.pypa.io/get-pip.py
-if "%CUDA_URL%"               equ "" set CUDA_URL=https://developer.download.nvidia.com/compute/cuda/12.6.2/local_installers/cuda_12.6.2_560.94_windows.exe
-if "%VULKAN_URL%"             equ "" set VULKAN_URL=https://sdk.lunarg.com/sdk/download/1.3.296.0/windows/VulkanSDK-1.3.296.0-Installer.exe
-if "%POTABLE_CHROME_URL%"     equ "" set POTABLE_CHROME_URL=https://storage.googleapis.com/chrome-for-testing-public/138.0.7204.168/win64/chrome-win64.zip
-if "%POTABLE_CHROME_DRIVER_URL%" equ "" set POTABLE_CHROME_DRIVER_URL=https://storage.googleapis.com/chrome-for-testing-public/138.0.7204.168/win64/chromedriver-win64.zip
-if "%POTABLE_FFMPEG_URL%"     equ "" set POTABLE_FFMPEG_URL=https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip
-if "%POTABLE_NODEJS_URL%"     equ "" set POTABLE_NODEJS_URL=https://nodejs.org/download/release/v22.19.0/node-v22.19.0-win-x64.zip
-if "%POTABLE_GO_URL%"         equ "" set POTABLE_GO_URL=https://go.dev/dl/go1.25.1.windows-amd64.zip
-if "%POTABLE_BUN_URL%"        equ "" set POTABLE_BUN_URL=https://github.com/oven-sh/bun/releases/latest/download/bun-windows-x64.zip
-if "%POTABLE_SVN_URL%"        equ "" set POTABLE_SVN_URL=https://www.visualsvn.com/files/Apache-Subversion-1.14.5-3.zip
+if "%PORTABLE_GIT_URL%"        equ "" set PORTABLE_GIT_URL=https://github.com/git-for-windows/git/releases/download/v2.47.0.windows.2/PortableGit-2.47.0.2-64-bit.7z.exe
+::if "%PORTABLE_CMAKE_URL%"    equ "" set PORTABLE_CMAKE_URL=https://github.com/Kitware/CMake/releases/download/v3.30.5/cmake-3.30.5-windows-x86_64.zip
+if "%PORTABLE_CMAKE_URL%"      equ "" set PORTABLE_CMAKE_URL=https://github.com/Kitware/CMake/releases/download/v3.28.6/cmake-3.28.6-windows-x86_64.zip
+::if "%PORTABLE_UV_URL%"         equ "" set PORTABLE_UV_URL=https://github.com/astral-sh/uv/releases/latest/download/uv-x86_64-pc-windows-msvc.zip
+if "%PORTABLE_UV_URL%"         equ "" set PORTABLE_UV_URL=https://github.com/astral-sh/uv/releases/download/0.10.7/uv-x86_64-pc-windows-msvc.zip
+if "%PORTABLE_UV_PY_VER%"      equ "" set PORTABLE_UV_PY_VER=3.12.9
+::if "%PORTABLE_PYTHON_URL%"   equ "" set PORTABLE_PYTHON_URL=https://www.python.org/ftp/python/3.13.0/python-3.13.0-embed-amd64.zip
+if "%PORTABLE_PYTHON_URL%"     equ "" set PORTABLE_PYTHON_URL=https://www.python.org/ftp/python/3.12.9/python-3.12.9-embed-amd64.zip
+if "%PORTABLE_PYTHON_PIP_URL%" equ "" set PORTABLE_PYTHON_PIP_URL=https://bootstrap.pypa.io/get-pip.py
+if "%CUDA_URL%"                equ "" set CUDA_URL=https://developer.download.nvidia.com/compute/cuda/12.6.2/local_installers/cuda_12.6.2_560.94_windows.exe
+if "%VULKAN_URL%"              equ "" set VULKAN_URL=https://sdk.lunarg.com/sdk/download/1.3.296.0/windows/VulkanSDK-1.3.296.0-Installer.exe
+if "%PORTABLE_CHROME_URL%"     equ "" set PORTABLE_CHROME_URL=https://storage.googleapis.com/chrome-for-testing-public/138.0.7204.168/win64/chrome-win64.zip
+if "%PORTABLE_CHROME_DRIVER_URL%" equ "" set PORTABLE_CHROME_DRIVER_URL=https://storage.googleapis.com/chrome-for-testing-public/138.0.7204.168/win64/chromedriver-win64.zip
+if "%PORTABLE_FFMPEG_URL%"     equ "" set PORTABLE_FFMPEG_URL=https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip
+if "%PORTABLE_NODEJS_URL%"     equ "" set PORTABLE_NODEJS_URL=https://nodejs.org/download/release/v22.19.0/node-v22.19.0-win-x64.zip
+if "%PORTABLE_GO_URL%"         equ "" set PORTABLE_GO_URL=https://go.dev/dl/go1.25.1.windows-amd64.zip
+if "%PORTABLE_BUN_URL%"        equ "" set PORTABLE_BUN_URL=https://github.com/oven-sh/bun/releases/latest/download/bun-windows-x64.zip
+if "%PORTABLE_SVN_URL%"        equ "" set PORTABLE_SVN_URL=https://www.visualsvn.com/files/Apache-Subversion-1.14.5-3.zip
 
 ::###################################################################################
 :: etc settings
@@ -174,14 +183,14 @@ echo.
 goto :SUCCESS
 :ERROR
     echo ################################
-    echo #   potable-cmd launch error   #
+    echo #   portable-cmd launch error   #
     echo ################################
     pause
 exit /b 1
 
 :SUCCESS
     echo ##################################
-    echo #   potable-cmd launch success   #
+    echo #   portable-cmd launch success   #
     echo ##################################
     echo.
     
@@ -347,25 +356,25 @@ exit /b 1
 :ACTIVATE_GIT
     echo;
     echo ##### checking installed git...
-    for %%A in ("%POTABLE_GIT_URL:/=" "%") do set "POTABLE_GIT_FILENAME=%%~nxA"
-    set POTABLE_GIT_DL=%LIB_DIR%\%POTABLE_GIT_FILENAME%
-    set POTABLE_GIT_ROOT=%LIB_DIR%\git
-    set POTABLE_GIT_CMD=%POTABLE_GIT_ROOT%\bin\git.exe
+    for %%A in ("%PORTABLE_GIT_URL:/=" "%") do set "PORTABLE_GIT_FILENAME=%%~nxA"
+    set PORTABLE_GIT_DL=%LIB_DIR%\%PORTABLE_GIT_FILENAME%
+    set PORTABLE_GIT_ROOT=%LIB_DIR%\git
+    set PORTABLE_GIT_CMD=%PORTABLE_GIT_ROOT%\bin\git.exe
 
     :: find system git
     call :FIND_SYSTEM_EXE git --version
     if ERRORLEVEL 1 (
-        :: check already installed potable git
-        if not exist "%POTABLE_GIT_CMD%" (
+        :: check already installed portable git
+        if not exist "%PORTABLE_GIT_CMD%" (
             echo git is not installed
 
-            :: install potable git
+            :: install portable git
             call :INSTALL_GIT
             if ERRORLEVEL 1 exit /b 1
         )
 
-        :: append potable git path
-        set "PATH=%POTABLE_GIT_ROOT%\bin;%PATH%"
+        :: append portable git path
+        set "PATH=%PORTABLE_GIT_ROOT%\bin;%PATH%"
 
         :: output git path and version
         call :WHERE_EXE git --version
@@ -376,24 +385,24 @@ exit /b 1
 exit /b 0
 
 :INSTALL_GIT
-    echo ##### downloading potable git...
-    curl -L %POTABLE_GIT_URL% -o "%POTABLE_GIT_DL%"
+    echo ##### downloading portable git...
+    curl -L %PORTABLE_GIT_URL% -o "%PORTABLE_GIT_DL%"
     if ERRORLEVEL 1 (
-        echo %POTABLE_GIT_URL% download failed
+        echo %PORTABLE_GIT_URL% download failed
         exit /b 1
     )
-    echo ##### installing potable git...
+    echo ##### installing portable git...
     :: Execute the self-extracting exe file
-	"%POTABLE_GIT_DL%" -o "%POTABLE_GIT_ROOT%" -y
+	"%PORTABLE_GIT_DL%" -o "%PORTABLE_GIT_ROOT%" -y
     if ERRORLEVEL 1 (
-        echo %POTABLE_GIT_DL% install failed
+        echo %PORTABLE_GIT_DL% install failed
         exit /b 1
     )
 
     :: delete dl file
-	del "%POTABLE_GIT_DL%"
+	del "%PORTABLE_GIT_DL%"
     if ERRORLEVEL 1 (
-        echo %POTABLE_GIT_DL% delete failed
+        echo %PORTABLE_GIT_DL% delete failed
         exit /b 1
     )
 
@@ -407,23 +416,23 @@ exit /b 0
 :ACTIVATE_CMAKE
     echo;
     echo ##### checking installed cmake...
-    for %%A in ("%POTABLE_CMAKE_URL:/=" "%") do set "POTABLE_CMAKE_FILENAME=%%~nxA"
-    set POTABLE_CMAKE_DL=%LIB_DIR%\%POTABLE_CMAKE_FILENAME%
-    set POTABLE_CMAKE_ROOT=%LIB_DIR%\cmake
+    for %%A in ("%PORTABLE_CMAKE_URL:/=" "%") do set "PORTABLE_CMAKE_FILENAME=%%~nxA"
+    set PORTABLE_CMAKE_DL=%LIB_DIR%\%PORTABLE_CMAKE_FILENAME%
+    set PORTABLE_CMAKE_ROOT=%LIB_DIR%\cmake
 
     :: find system cmake
     call :FIND_SYSTEM_EXE cmake --version
     if ERRORLEVEL 1 (
-        :: check already installed potable cmake
-        if not exist "%POTABLE_CMAKE_ROOT%\bin\cmake.exe" (
+        :: check already installed portable cmake
+        if not exist "%PORTABLE_CMAKE_ROOT%\bin\cmake.exe" (
             echo cmake is not installed
 
-            :: install potable cmake
+            :: install portable cmake
             call :INSTALL_CMAKE
             if ERRORLEVEL 1 exit /b 1
         )
-        :: append potable cmake path
-        set "PATH=%POTABLE_CMAKE_ROOT%\bin;%PATH%"
+        :: append portable cmake path
+        set "PATH=%PORTABLE_CMAKE_ROOT%\bin;%PATH%"
 
         :: output cmake path and version
         call :WHERE_EXE cmake --version
@@ -434,30 +443,30 @@ exit /b 0
 exit /b 0
 
 :INSTALL_CMAKE
-    echo ##### downloading potable cmake...
-    curl -L %POTABLE_CMAKE_URL% -o "%POTABLE_CMAKE_DL%"
+    echo ##### downloading portable cmake...
+    curl -L %PORTABLE_CMAKE_URL% -o "%PORTABLE_CMAKE_DL%"
     if ERRORLEVEL 1 (
-        echo %POTABLE_CMAKE_URL% download failed
+        echo %PORTABLE_CMAKE_URL% download failed
         exit /b 1
     )
-    echo ##### installing potable cmake...
+    echo ##### installing portable cmake...
     :: unzip
-    powershell -Command "Expand-Archive -Path '%POTABLE_CMAKE_DL%' -DestinationPath '%LIB_DIR%'"
+    powershell -Command "Expand-Archive -Path '%PORTABLE_CMAKE_DL%' -DestinationPath '%LIB_DIR%'"
     if ERRORLEVEL 1 (
-        echo %POTABLE_CMAKE_DL% unzip failed
+        echo %PORTABLE_CMAKE_DL% unzip failed
         exit /b 1
     )
 
     :: delete dl file
-	del "%POTABLE_CMAKE_DL%"
+	del "%PORTABLE_CMAKE_DL%"
     if ERRORLEVEL 1 (
-        echo %POTABLE_CMAKE_DL% delete failed
+        echo %PORTABLE_CMAKE_DL% delete failed
         exit /b 1
     )
 
     :: Extract folder name from full path
-    for %%A in ("%POTABLE_CMAKE_DL:/=" "%") do set "_DL_NAME=%%~nA"
-    for %%A in ("%POTABLE_CMAKE_ROOT:\=" "%") do set "_NAME=%%~nA"
+    for %%A in ("%PORTABLE_CMAKE_DL:/=" "%") do set "_DL_NAME=%%~nA"
+    for %%A in ("%PORTABLE_CMAKE_ROOT:\=" "%") do set "_NAME=%%~nA"
     
     :: rename
     ren "%LIB_DIR%\%_DL_NAME%" "%_NAME%"
@@ -475,22 +484,22 @@ exit /b 0
 :ACTIVATE_UV
     echo;
     echo ##### checking installed uv...
-    for %%A in ("%POTABLE_UV_URL:/=" "%") do set "POTABLE_UV_FILENAME=%%~nxA"
-    set POTABLE_UV_DL=%LIB_DIR%\%POTABLE_UV_FILENAME%
-    set POTABLE_UV_ROOT=%LIB_DIR%\uv
+    for %%A in ("%PORTABLE_UV_URL:/=" "%") do set "PORTABLE_UV_FILENAME=%%~nxA"
+    set PORTABLE_UV_DL=%LIB_DIR%\%PORTABLE_UV_FILENAME%
+    set PORTABLE_UV_ROOT=%LIB_DIR%\uv
 
-    :: check already installed potable uv
+    :: check already installed portable uv
     call :FIND_SYSTEM_EXE uv --version
     if ERRORLEVEL 1 (
-        if not exist "%POTABLE_UV_ROOT%\uv.exe" (
+        if not exist "%PORTABLE_UV_ROOT%\uv.exe" (
             echo uv is not installed
 
-            :: install potable uv
+            :: install portable uv
             call :INSTALL_UV
             if ERRORLEVEL 1 exit /b 1
         ) else (
-            :: append potable uv path
-            set "PATH=%POTABLE_UV_ROOT%;%PATH%"
+            :: append portable uv path
+            set "PATH=%PORTABLE_UV_ROOT%;%PATH%"
         )
 
         :: output uv path and version
@@ -501,11 +510,11 @@ exit /b 0
     :: initialize uv project
     if not exist "pyproject.toml" (
         :: Create .venv and pyproject.toml
-        uv init --bare --python %POTABLE_UV_PY_VER%
+        uv init --bare --python %PORTABLE_UV_PY_VER%
         if ERRORLEVEL 1 exit /b 1
 
         :: Create .python-version. (Fix python version)
-        uv python pin %POTABLE_UV_PY_VER%
+        uv python pin %PORTABLE_UV_PY_VER%
         if ERRORLEVEL 1 exit /b 1
     )
     
@@ -524,29 +533,29 @@ exit /b 0
 exit /b 0
 
 :INSTALL_UV
-    echo ##### downloading potable uv...
-    curl -L %POTABLE_UV_URL% -o "%POTABLE_UV_DL%"
+    echo ##### downloading portable uv...
+    curl -L %PORTABLE_UV_URL% -o "%PORTABLE_UV_DL%"
     if ERRORLEVEL 1 (
-        echo %POTABLE_UV_URL% download failed
+        echo %PORTABLE_UV_URL% download failed
         exit /b 1
     )
     
-    echo ##### installing potable uv...
+    echo ##### installing portable uv...
     :: unzip
-    powershell -Command "Expand-Archive -Path '%POTABLE_UV_DL%' -DestinationPath '%POTABLE_UV_ROOT%'"
+    powershell -Command "Expand-Archive -Path '%PORTABLE_UV_DL%' -DestinationPath '%PORTABLE_UV_ROOT%'"
     if ERRORLEVEL 1 (
-        echo %POTABLE_UV_DL% unzip failed
+        echo %PORTABLE_UV_DL% unzip failed
         exit /b 1
     )
     
     :: delete dl file
-    del "%POTABLE_UV_DL%"
+    del "%PORTABLE_UV_DL%"
     if ERRORLEVEL 1 (
-        echo %POTABLE_UV_DL% delete failed
+        echo %PORTABLE_UV_DL% delete failed
         exit /b 1
     )
     
-    set "PATH=%POTABLE_UV_ROOT%;%PATH%"
+    set "PATH=%PORTABLE_UV_ROOT%;%PATH%"
     
     echo ##### uv installed
 exit /b 0
@@ -558,29 +567,29 @@ exit /b 0
 :ACTIVATE_PYTHON
     echo;
     echo ##### checking installed python...
-    for %%A in ("%POTABLE_PYTHON_URL:/=" "%") do set "POTABLE_PYTHON_FILENAME=%%~nxA"
-    set POTABLE_PYTHON_DL=%LIB_DIR%\%POTABLE_PYTHON_FILENAME%
-    set POTABLE_PYTHON_ROOT=%LIB_DIR%\python
-    set POTABLE_PYTHON_CMD=%POTABLE_PYTHON_ROOT%\python.exe
+    for %%A in ("%PORTABLE_PYTHON_URL:/=" "%") do set "PORTABLE_PYTHON_FILENAME=%%~nxA"
+    set PORTABLE_PYTHON_DL=%LIB_DIR%\%PORTABLE_PYTHON_FILENAME%
+    set PORTABLE_PYTHON_ROOT=%LIB_DIR%\python
+    set PORTABLE_PYTHON_CMD=%PORTABLE_PYTHON_ROOT%\python.exe
     ::set VENV_DIR=%WORKSPACE_ROOT%\%PYTHON_VENV_DIR_NAME%
     set VENV_DIR=%CUR_DIR%%PYTHON_VENV_DIR_NAME%
 
     :: find system python
     call :FIND_SYSTEM_EXE python --version
     if ERRORLEVEL 1 (
-        :: check already installed potable python
-        if not exist "%POTABLE_PYTHON_CMD%" (
+        :: check already installed portable python
+        if not exist "%PORTABLE_PYTHON_CMD%" (
             echo ##### python is not installed
 
-            :: install potable python
+            :: install portable python
             call :INSTALL_PYTHON
             if ERRORLEVEL 1 exit /b 1
 
             set SETUPED_PYTHON=1
         )
 
-        :: append potable python path
-        set "PATH=%POTABLE_PYTHON_ROOT%\Scripts;%POTABLE_PYTHON_ROOT%;%PATH%"
+        :: append portable python path
+        set "PATH=%PORTABLE_PYTHON_ROOT%\Scripts;%PORTABLE_PYTHON_ROOT%;%PATH%"
         :: disable user site-packages
         set PYTHONNOUSERSITE=1
         
@@ -610,30 +619,30 @@ exit /b 0
 exit /b 0
 
 :INSTALL_PYTHON
-    echo ##### downloading potable ython...
-    curl -L %POTABLE_PYTHON_URL% -o "%POTABLE_PYTHON_DL%"
+    echo ##### downloading portable ython...
+    curl -L %PORTABLE_PYTHON_URL% -o "%PORTABLE_PYTHON_DL%"
     if ERRORLEVEL 1 (
-        echo %POTABLE_PYTHON_URL% download failed
+        echo %PORTABLE_PYTHON_URL% download failed
         exit /b 1
     )
-    echo ##### installing potable python...
+    echo ##### installing portable python...
     :: unzip
-    powershell -Command "Expand-Archive -Path '%POTABLE_PYTHON_DL%' -DestinationPath '%POTABLE_PYTHON_ROOT%'"
+    powershell -Command "Expand-Archive -Path '%PORTABLE_PYTHON_DL%' -DestinationPath '%PORTABLE_PYTHON_ROOT%'"
     if ERRORLEVEL 1 (
-        echo %POTABLE_PYTHON_DL% unzip failed
+        echo %PORTABLE_PYTHON_DL% unzip failed
         exit /b 1
     )
 
     :: delete dl file
-	del "%POTABLE_PYTHON_DL%"
+	del "%PORTABLE_PYTHON_DL%"
     if ERRORLEVEL 1 (
-        echo %POTABLE_PYTHON_DL% delete failed
+        echo %PORTABLE_PYTHON_DL% delete failed
         exit /b 1
     )
     
     echo ## enabling 'site' module...
     :: find pythonXXX._pth. and replace '#import site' to 'import site'
-    for /r "%POTABLE_PYTHON_ROOT%" %%f in (python*._pth) do (
+    for /r "%PORTABLE_PYTHON_ROOT%" %%f in (python*._pth) do (
     	powershell "&{(Get-Content '%%f') -creplace '#import site', 'import site' | Set-Content '%%f' }"
         if ERRORLEVEL 1 (
             echo '%%f' replace failed
@@ -642,24 +651,24 @@ exit /b 0
     )
     
     :: add current directory to sys.path
-    echo import sys; sys.path.append('') >> "%POTABLE_PYTHON_ROOT%\current.pth"
+    echo import sys; sys.path.append('') >> "%PORTABLE_PYTHON_ROOT%\current.pth"
 
     echo ## downloading pip...
-    curl -sSL "%POTABLE_PYTHON_PIP_URL%" -o "%POTABLE_PYTHON_ROOT%\get-pip.py"
+    curl -sSL "%PORTABLE_PYTHON_PIP_URL%" -o "%PORTABLE_PYTHON_ROOT%\get-pip.py"
     if ERRORLEVEL 1 (
-        echo %POTABLE_PYTHON_PIP_URL% download failed
+        echo %PORTABLE_PYTHON_PIP_URL% download failed
         exit /b 1
     )
     
     echo ## installing pip...
-	"%POTABLE_PYTHON_CMD%" "%POTABLE_PYTHON_ROOT%\get-pip.py" --no-warn-script-location
+	"%PORTABLE_PYTHON_CMD%" "%PORTABLE_PYTHON_ROOT%\get-pip.py" --no-warn-script-location
     if ERRORLEVEL 1 (
         echo pip install failed
         exit /b 1
     )
     
     echo ## installing virtualenv...
-    "%POTABLE_PYTHON_CMD%" -m pip install virtualenv --no-warn-script-location
+    "%PORTABLE_PYTHON_CMD%" -m pip install virtualenv --no-warn-script-location
     if ERRORLEVEL 1 (
         echo virtualenv install failed
         exit /b 1
@@ -680,17 +689,17 @@ exit /b 0
     echo ## creating python venv...
 
     :: check venv module (python standard module)
-    "%POTABLE_PYTHON_CMD%" -c "import venv" >nul 2>&1
+    "%PORTABLE_PYTHON_CMD%" -c "import venv" >nul 2>&1
     if ERRORLEVEL 1 (
         :: use virtualenv (installed virtualenv module)
-        "%POTABLE_PYTHON_CMD%" -m virtualenv "%VENV_DIR%"
+        "%PORTABLE_PYTHON_CMD%" -m virtualenv "%VENV_DIR%"
         if ERRORLEVEL 1 (
             echo virtualenv create failed
             exit /b 1
         )
     ) else (
         :: use venv (python standard module)
-        "%POTABLE_PYTHON_CMD%" -m venv "%VENV_DIR%"
+        "%PORTABLE_PYTHON_CMD%" -m venv "%VENV_DIR%"
         if ERRORLEVEL 1 (
             echo venv create failed
             exit /b 1
@@ -706,16 +715,16 @@ exit /b 0
 
 :INSTALL_REQUIRED_PYTHON_MODULE
     echo ## installing required modules...
-    if "%POTABLE_PYTHON_REQUIREMENT_MODULES_BASE%" neq "" (
-        python -m pip install %POTABLE_PYTHON_REQUIREMENT_MODULES_BASE%
+    if "%PORTABLE_PYTHON_REQUIREMENT_MODULES_BASE%" neq "" (
+        python -m pip install %PORTABLE_PYTHON_REQUIREMENT_MODULES_BASE%
         if ERRORLEVEL 1 exit /b 1
     )
-    if "%POTABLE_PYTHON_REQUIREMENT_MODULES_DEFAULT%" neq "" (
-        python -m pip install %POTABLE_PYTHON_REQUIREMENT_MODULES_DEFAULT%
+    if "%PORTABLE_PYTHON_REQUIREMENT_MODULES_DEFAULT%" neq "" (
+        python -m pip install %PORTABLE_PYTHON_REQUIREMENT_MODULES_DEFAULT%
         if ERRORLEVEL 1 exit /b 1
 
         :: install Playwright Chromium if playwright is in requirement modules
-        echo %POTABLE_PYTHON_REQUIREMENT_MODULES_DEFAULT% | findstr /i "playwright" >nul
+        echo %PORTABLE_PYTHON_REQUIREMENT_MODULES_DEFAULT% | findstr /i "playwright" >nul
         if not ERRORLEVEL 1 (
             echo ## installing Playwright Chromium...
             python -m playwright install chromium
@@ -884,21 +893,21 @@ exit /b 0
 :ACTIVATE_CHROME
     echo;
     echo ##### checking installed chrome...
-    for %%A in ("%POTABLE_CHROME_URL:/=" "%") do set "POTABLE_CHROME_FILENAME=%%~nxA"
-    set POTABLE_CHROME_DL=%LIB_DIR%\%POTABLE_CHROME_FILENAME%
-    set POTABLE_CHROME_ROOT=%LIB_DIR%\chrome
+    for %%A in ("%PORTABLE_CHROME_URL:/=" "%") do set "PORTABLE_CHROME_FILENAME=%%~nxA"
+    set PORTABLE_CHROME_DL=%LIB_DIR%\%PORTABLE_CHROME_FILENAME%
+    set PORTABLE_CHROME_ROOT=%LIB_DIR%\chrome
 
-    :: check already installed potable chrome
-    if not exist "%POTABLE_CHROME_ROOT%\chrome.exe" (
+    :: check already installed portable chrome
+    if not exist "%PORTABLE_CHROME_ROOT%\chrome.exe" (
         echo chrome is not installed
 
-        :: install potable chrome
+        :: install portable chrome
         call :INSTALL_CHROME
         if ERRORLEVEL 1 exit /b 1
     )
 
-    :: check already installed potable chrome
-    if not exist "%POTABLE_CHROME_ROOT%\chrome.exe" (
+    :: check already installed portable chrome
+    if not exist "%PORTABLE_CHROME_ROOT%\chrome.exe" (
         echo chrome driver install failed
         exit /b 1
     )
@@ -907,30 +916,30 @@ exit /b 0
 exit /b 0
 
 :INSTALL_CHROME
-    echo ##### downloading potable chrome...
-    curl -L %POTABLE_CHROME_URL% -o "%POTABLE_CHROME_DL%"
+    echo ##### downloading portable chrome...
+    curl -L %PORTABLE_CHROME_URL% -o "%PORTABLE_CHROME_DL%"
     if ERRORLEVEL 1 (
-        echo %POTABLE_CHROME_URL% download failed
+        echo %PORTABLE_CHROME_URL% download failed
         exit /b 1
     )
-    echo ##### installing potable chrome...
+    echo ##### installing portable chrome...
     :: unzip
-    powershell -Command "Expand-Archive -Path '%POTABLE_CHROME_DL%' -DestinationPath '%LIB_DIR%'"
+    powershell -Command "Expand-Archive -Path '%PORTABLE_CHROME_DL%' -DestinationPath '%LIB_DIR%'"
     if ERRORLEVEL 1 (
-        echo %POTABLE_CHROME_DL% unzip failed
+        echo %PORTABLE_CHROME_DL% unzip failed
         exit /b 1
     )
 
     :: delete dl file
-	del "%POTABLE_CHROME_DL%"
+	del "%PORTABLE_CHROME_DL%"
     if ERRORLEVEL 1 (
-        echo %POTABLE_CHROME_DL% delete failed
+        echo %PORTABLE_CHROME_DL% delete failed
         exit /b 1
     )
 
     :: Extract folder name from full path
-    for %%A in ("%POTABLE_CHROME_DL:/=" "%") do set "_DL_NAME=%%~nA"
-    for %%A in ("%POTABLE_CHROME_ROOT:\=" "%") do set "_NAME=%%~nA"
+    for %%A in ("%PORTABLE_CHROME_DL:/=" "%") do set "_DL_NAME=%%~nA"
+    for %%A in ("%PORTABLE_CHROME_ROOT:\=" "%") do set "_NAME=%%~nA"
     
     :: rename
     ren "%LIB_DIR%\%_DL_NAME%" "%_NAME%"
@@ -948,21 +957,21 @@ exit /b 0
 :ACTIVATE_CHROME_DRIVER
     echo;
     echo ##### checking installed chrome driver...
-    for %%A in ("%POTABLE_CHROME_DRIVER_URL:/=" "%") do set "POTABLE_CHROME_DRIVER_FILENAME=%%~nxA"
-    set POTABLE_CHROME_DRIVER_DL=%LIB_DIR%\%POTABLE_CHROME_DRIVER_FILENAME%
-    set POTABLE_CHROME_DRIVER_ROOT=%LIB_DIR%\chrome_driver
+    for %%A in ("%PORTABLE_CHROME_DRIVER_URL:/=" "%") do set "PORTABLE_CHROME_DRIVER_FILENAME=%%~nxA"
+    set PORTABLE_CHROME_DRIVER_DL=%LIB_DIR%\%PORTABLE_CHROME_DRIVER_FILENAME%
+    set PORTABLE_CHROME_DRIVER_ROOT=%LIB_DIR%\chrome_driver
 
-    :: check already installed potable chrome
-    if not exist "%POTABLE_CHROME_DRIVER_ROOT%\chromedriver.exe" (
+    :: check already installed portable chrome
+    if not exist "%PORTABLE_CHROME_DRIVER_ROOT%\chromedriver.exe" (
         echo chrome driver is not installed
 
-        :: install potable chrome
+        :: install portable chrome
         call :INSTALL_CHROME_DRIVER
         if ERRORLEVEL 1 exit /b 1
     )
 
-    :: check already installed potable chrome
-    if not exist "%POTABLE_CHROME_DRIVER_ROOT%\chromedriver.exe" (
+    :: check already installed portable chrome
+    if not exist "%PORTABLE_CHROME_DRIVER_ROOT%\chromedriver.exe" (
         echo chrome driver install failed
         exit /b 1
     )
@@ -971,30 +980,30 @@ exit /b 0
 exit /b 0
 
 :INSTALL_CHROME_DRIVER
-    echo ##### downloading potable chrome...
-    curl -L %POTABLE_CHROME_DRIVER_URL% -o "%POTABLE_CHROME_DRIVER_DL%"
+    echo ##### downloading portable chrome...
+    curl -L %PORTABLE_CHROME_DRIVER_URL% -o "%PORTABLE_CHROME_DRIVER_DL%"
     if ERRORLEVEL 1 (
-        echo %POTABLE_CHROME_DRIVER_URL% download failed
+        echo %PORTABLE_CHROME_DRIVER_URL% download failed
         exit /b 1
     )
-    echo ##### installing potable chrome...
+    echo ##### installing portable chrome...
     :: unzip
-    powershell -Command "Expand-Archive -Path '%POTABLE_CHROME_DRIVER_DL%' -DestinationPath '%LIB_DIR%'"
+    powershell -Command "Expand-Archive -Path '%PORTABLE_CHROME_DRIVER_DL%' -DestinationPath '%LIB_DIR%'"
     if ERRORLEVEL 1 (
-        echo %POTABLE_CHROME_DRIVER_DL% unzip failed
+        echo %PORTABLE_CHROME_DRIVER_DL% unzip failed
         exit /b 1
     )
 
     :: delete dl file
-	del "%POTABLE_CHROME_DRIVER_DL%"
+	del "%PORTABLE_CHROME_DRIVER_DL%"
     if ERRORLEVEL 1 (
-        echo %POTABLE_CHROME_DRIVER_DL% delete failed
+        echo %PORTABLE_CHROME_DRIVER_DL% delete failed
         exit /b 1
     )
 
     :: Extract folder name from full path
-    for %%A in ("%POTABLE_CHROME_DRIVER_DL:/=" "%") do set "_DL_NAME=%%~nA"
-    for %%A in ("%POTABLE_CHROME_DRIVER_ROOT:\=" "%") do set "_NAME=%%~nA"
+    for %%A in ("%PORTABLE_CHROME_DRIVER_DL:/=" "%") do set "_DL_NAME=%%~nA"
+    for %%A in ("%PORTABLE_CHROME_DRIVER_ROOT:\=" "%") do set "_NAME=%%~nA"
     
     :: rename
     ren "%LIB_DIR%\%_DL_NAME%" "%_NAME%"
@@ -1012,20 +1021,20 @@ exit /b 0
 :ACTIVATE_FFMPEG
     echo;
     echo ##### checking installed ffmpeg...
-    for %%A in ("%POTABLE_FFMPEG_URL:/=" "%") do set "POTABLE_FFMPEG_FILENAME=%%~nxA"
-    set POTABLE_FFMPEG_DL=%LIB_DIR%\%POTABLE_FFMPEG_FILENAME%
-    set POTABLE_FFMPEG_ROOT=%LIB_DIR%\ffmpeg
+    for %%A in ("%PORTABLE_FFMPEG_URL:/=" "%") do set "PORTABLE_FFMPEG_FILENAME=%%~nxA"
+    set PORTABLE_FFMPEG_DL=%LIB_DIR%\%PORTABLE_FFMPEG_FILENAME%
+    set PORTABLE_FFMPEG_ROOT=%LIB_DIR%\ffmpeg
 
-    :: check already installed potable ffmpeg
-    if not exist "%POTABLE_FFMPEG_ROOT%\bin\ffmpeg.exe" (
+    :: check already installed portable ffmpeg
+    if not exist "%PORTABLE_FFMPEG_ROOT%\bin\ffmpeg.exe" (
         echo ffmpeg is not installed
 
-        :: install potable ffmpeg
+        :: install portable ffmpeg
         call :INSTALL_FFMPEG
         if ERRORLEVEL 1 exit /b 1
     )
-    :: append potable ffmpeg path
-    set "PATH=%POTABLE_FFMPEG_ROOT%\bin;%PATH%"
+    :: append portable ffmpeg path
+    set "PATH=%PORTABLE_FFMPEG_ROOT%\bin;%PATH%"
 
     :: output ffmpeg path and version
     call :WHERE_EXE ffmpeg.exe -version
@@ -1035,30 +1044,30 @@ exit /b 0
 exit /b 0
 
 :INSTALL_FFMPEG
-    echo ##### downloading potable ffmpeg...
-    curl -L %POTABLE_FFMPEG_URL% -o "%POTABLE_FFMPEG_DL%"
+    echo ##### downloading portable ffmpeg...
+    curl -L %PORTABLE_FFMPEG_URL% -o "%PORTABLE_FFMPEG_DL%"
     if ERRORLEVEL 1 (
-        echo %POTABLE_FFMPEG_URL% download failed
+        echo %PORTABLE_FFMPEG_URL% download failed
         exit /b 1
     )
-    echo ##### installing potable ffmpeg...
+    echo ##### installing portable ffmpeg...
     :: unzip
-    powershell -Command "Expand-Archive -Path '%POTABLE_FFMPEG_DL%' -DestinationPath '%LIB_DIR%'"
+    powershell -Command "Expand-Archive -Path '%PORTABLE_FFMPEG_DL%' -DestinationPath '%LIB_DIR%'"
     if ERRORLEVEL 1 (
-        echo %POTABLE_FFMPEG_DL% unzip failed
+        echo %PORTABLE_FFMPEG_DL% unzip failed
         exit /b 1
     )
 
     :: delete dl file
-	del "%POTABLE_FFMPEG_DL%"
+	del "%PORTABLE_FFMPEG_DL%"
     if ERRORLEVEL 1 (
-        echo %POTABLE_FFMPEG_DL% delete failed
+        echo %PORTABLE_FFMPEG_DL% delete failed
         exit /b 1
     )
 
     :: Extract folder name from full path
-    for %%A in ("%POTABLE_FFMPEG_DL:/=" "%") do set "_DL_NAME=%%~nA"
-    for %%A in ("%POTABLE_FFMPEG_ROOT:\=" "%") do set "_NAME=%%~nA"
+    for %%A in ("%PORTABLE_FFMPEG_DL:/=" "%") do set "_DL_NAME=%%~nA"
+    for %%A in ("%PORTABLE_FFMPEG_ROOT:\=" "%") do set "_NAME=%%~nA"
     
     :: rename
     ren "%LIB_DIR%\%_DL_NAME%" "%_NAME%"
@@ -1076,22 +1085,22 @@ exit /b 0
 :ACTIVATE_NODEJS
     echo;
     echo ##### checking installed nodejs...
-    for %%A in ("%POTABLE_NODEJS_URL:/=" "%") do set "POTABLE_NODEJS_FILENAME=%%~nxA"
-    set POTABLE_NODEJS_DL=%LIB_DIR%\%POTABLE_NODEJS_FILENAME%
-    set POTABLE_NODEJS_ROOT=%LIB_DIR%\nodejs
+    for %%A in ("%PORTABLE_NODEJS_URL:/=" "%") do set "PORTABLE_NODEJS_FILENAME=%%~nxA"
+    set PORTABLE_NODEJS_DL=%LIB_DIR%\%PORTABLE_NODEJS_FILENAME%
+    set PORTABLE_NODEJS_ROOT=%LIB_DIR%\nodejs
 
-    :: check already installed potable nodejs
+    :: check already installed portable nodejs
     call :FIND_SYSTEM_EXE npm --version
     if ERRORLEVEL 1 (
-	    if not exist "%POTABLE_NODEJS_ROOT%\npm" (
+	    if not exist "%PORTABLE_NODEJS_ROOT%\npm" (
 	        echo nodejs is not installed
 
-	        :: install potable nodejs
+	        :: install portable nodejs
 	        call :INSTALL_NODEJS
 	        if ERRORLEVEL 1 exit /b 1
 	    ) else (
-		    :: append potable nodejs path
-		    set "PATH=%POTABLE_NODEJS_ROOT%;%PATH%"
+		    :: append portable nodejs path
+		    set "PATH=%PORTABLE_NODEJS_ROOT%;%PATH%"
 	    )
 
 	    :: output nodejs path and version
@@ -1107,30 +1116,30 @@ exit /b 0
 exit /b 0
 
 :INSTALL_NODEJS
-    echo ##### downloading potable nodejs...
-    curl -L %POTABLE_NODEJS_URL% -o "%POTABLE_NODEJS_DL%"
+    echo ##### downloading portable nodejs...
+    curl -L %PORTABLE_NODEJS_URL% -o "%PORTABLE_NODEJS_DL%"
     if ERRORLEVEL 1 (
-        echo %POTABLE_NODEJS_URL% download failed
+        echo %PORTABLE_NODEJS_URL% download failed
         exit /b 1
     )
-    echo ##### installing potable nodejs...
+    echo ##### installing portable nodejs...
     :: unzip
-    powershell -Command "Expand-Archive -Path '%POTABLE_NODEJS_DL%' -DestinationPath '%LIB_DIR%'"
+    powershell -Command "Expand-Archive -Path '%PORTABLE_NODEJS_DL%' -DestinationPath '%LIB_DIR%'"
     if ERRORLEVEL 1 (
-        echo %POTABLE_NODEJS_DL% unzip failed
+        echo %PORTABLE_NODEJS_DL% unzip failed
         exit /b 1
     )
 
     :: delete dl file
-	del "%POTABLE_NODEJS_DL%"
+	del "%PORTABLE_NODEJS_DL%"
     if ERRORLEVEL 1 (
-        echo %POTABLE_NODEJS_DL% delete failed
+        echo %PORTABLE_NODEJS_DL% delete failed
         exit /b 1
     )
 
     :: Extract folder name from full path
-    for %%A in ("%POTABLE_NODEJS_DL:/=" "%") do set "_DL_NAME=%%~nA"
-    for %%A in ("%POTABLE_NODEJS_ROOT:\=" "%") do set "_NAME=%%~nA"
+    for %%A in ("%PORTABLE_NODEJS_DL:/=" "%") do set "_DL_NAME=%%~nA"
+    for %%A in ("%PORTABLE_NODEJS_ROOT:\=" "%") do set "_NAME=%%~nA"
     
     :: rename
     ren "%LIB_DIR%\%_DL_NAME%" "%_NAME%"
@@ -1139,10 +1148,10 @@ exit /b 0
         exit /b 1
     )
     
-    set "PATH=%POTABLE_NODEJS_ROOT%;%PATH%"
+    set "PATH=%PORTABLE_NODEJS_ROOT%;%PATH%"
     
-    if "%POTABLE_NODEJS_REQUIREMENT_MODULES%" neq "" (
-        call npm install %POTABLE_NODEJS_REQUIREMENT_MODULES%
+    if "%PORTABLE_NODEJS_REQUIREMENT_MODULES%" neq "" (
+        call npm install %PORTABLE_NODEJS_REQUIREMENT_MODULES%
         if ERRORLEVEL 1 exit /b 1
     )
     
@@ -1161,22 +1170,22 @@ exit /b 0
 :ACTIVATE_GO
     echo;
     echo ##### checking installed go...
-    for %%A in ("%POTABLE_GO_URL:/=" "%") do set "POTABLE_GO_FILENAME=%%~nxA"
-    set POTABLE_GO_DL=%LIB_DIR%\%POTABLE_GO_FILENAME%
-    set POTABLE_GO_ROOT=%LIB_DIR%\go
+    for %%A in ("%PORTABLE_GO_URL:/=" "%") do set "PORTABLE_GO_FILENAME=%%~nxA"
+    set PORTABLE_GO_DL=%LIB_DIR%\%PORTABLE_GO_FILENAME%
+    set PORTABLE_GO_ROOT=%LIB_DIR%\go
 
-    :: check already installed potable go
+    :: check already installed portable go
     call :FIND_SYSTEM_EXE go version
     if ERRORLEVEL 1 (
-	    if not exist "%POTABLE_GO_ROOT%\bin\go.exe" (
+	    if not exist "%PORTABLE_GO_ROOT%\bin\go.exe" (
 	        echo go is not installed
 
-	        :: install potable go
+	        :: install portable go
 	        call :INSTALL_GO
 	        if ERRORLEVEL 1 exit /b 1
 	    )
-	    :: append potable go path
-	    set "PATH=%POTABLE_GO_ROOT%\bin;%PATH%"
+	    :: append portable go path
+	    set "PATH=%PORTABLE_GO_ROOT%\bin;%PATH%"
 
 	    :: output nodejs path and version
 	    call :WHERE_EXE go version
@@ -1187,24 +1196,24 @@ exit /b 0
 exit /b 0
 
 :INSTALL_GO
-    echo ##### downloading potable go...
-    curl -L %POTABLE_GO_URL% -o "%POTABLE_GO_DL%"
+    echo ##### downloading portable go...
+    curl -L %PORTABLE_GO_URL% -o "%PORTABLE_GO_DL%"
     if ERRORLEVEL 1 (
-        echo %POTABLE_GO_URL% download failed
+        echo %PORTABLE_GO_URL% download failed
         exit /b 1
     )
-    echo ##### installing potable go...
+    echo ##### installing portable go...
     :: unzip
-    powershell -Command "Expand-Archive -Path '%POTABLE_GO_DL%' -DestinationPath '%LIB_DIR%'"
+    powershell -Command "Expand-Archive -Path '%PORTABLE_GO_DL%' -DestinationPath '%LIB_DIR%'"
     if ERRORLEVEL 1 (
-        echo %POTABLE_GO_DL% unzip failed
+        echo %PORTABLE_GO_DL% unzip failed
         exit /b 1
     )
 
     :: delete dl file
-	del "%POTABLE_GO_DL%"
+	del "%PORTABLE_GO_DL%"
     if ERRORLEVEL 1 (
-        echo %POTABLE_GO_DL% delete failed
+        echo %PORTABLE_GO_DL% delete failed
         exit /b 1
     )
     
@@ -1218,22 +1227,22 @@ exit /b 0
 :ACTIVATE_BUN
     echo;
     echo ##### checking installed bun...
-    for %%A in ("%POTABLE_BUN_URL:/=" "%") do set "POTABLE_BUN_FILENAME=%%~nxA"
-    set POTABLE_BUN_DL=%LIB_DIR%\%POTABLE_BUN_FILENAME%
-    set POTABLE_BUN_ROOT=%LIB_DIR%\bun
+    for %%A in ("%PORTABLE_BUN_URL:/=" "%") do set "PORTABLE_BUN_FILENAME=%%~nxA"
+    set PORTABLE_BUN_DL=%LIB_DIR%\%PORTABLE_BUN_FILENAME%
+    set PORTABLE_BUN_ROOT=%LIB_DIR%\bun
 
-    :: check already installed potable bun
+    :: check already installed portable bun
     call :FIND_SYSTEM_EXE bun --version
     if ERRORLEVEL 1 (
-        if not exist "%POTABLE_BUN_ROOT%\bun.exe" (
+        if not exist "%PORTABLE_BUN_ROOT%\bun.exe" (
             echo bun is not installed
 
-            :: install potable bun
+            :: install portable bun
             call :INSTALL_BUN
             if ERRORLEVEL 1 exit /b 1
         ) else (
-            :: append potable bun path
-            set "PATH=%POTABLE_BUN_ROOT%;%PATH%"
+            :: append portable bun path
+            set "PATH=%PORTABLE_BUN_ROOT%;%PATH%"
         )
 
         :: output bun path and version
@@ -1245,30 +1254,30 @@ exit /b 0
 exit /b 0
 
 :INSTALL_BUN
-    echo ##### downloading potable bun...
-    curl -L %POTABLE_BUN_URL% -o "%POTABLE_BUN_DL%"
+    echo ##### downloading portable bun...
+    curl -L %PORTABLE_BUN_URL% -o "%PORTABLE_BUN_DL%"
     if ERRORLEVEL 1 (
-        echo %POTABLE_BUN_URL% download failed
+        echo %PORTABLE_BUN_URL% download failed
         exit /b 1
     )
-    echo ##### installing potable bun...
+    echo ##### installing portable bun...
     :: unzip
-    powershell -Command "Expand-Archive -Path '%POTABLE_BUN_DL%' -DestinationPath '%LIB_DIR%'"
+    powershell -Command "Expand-Archive -Path '%PORTABLE_BUN_DL%' -DestinationPath '%LIB_DIR%'"
     if ERRORLEVEL 1 (
-        echo %POTABLE_BUN_DL% unzip failed
+        echo %PORTABLE_BUN_DL% unzip failed
         exit /b 1
     )
 
     :: delete dl file
-    del "%POTABLE_BUN_DL%"
+    del "%PORTABLE_BUN_DL%"
     if ERRORLEVEL 1 (
-        echo %POTABLE_BUN_DL% delete failed
+        echo %PORTABLE_BUN_DL% delete failed
         exit /b 1
     )
     
     :: Extract folder name from full path
-    for %%A in ("%POTABLE_BUN_DL:/=" "%") do set "_DL_NAME=%%~nA"
-    for %%A in ("%POTABLE_BUN_ROOT:\=" "%") do set "_NAME=%%~nA"
+    for %%A in ("%PORTABLE_BUN_DL:/=" "%") do set "_DL_NAME=%%~nA"
+    for %%A in ("%PORTABLE_BUN_ROOT:\=" "%") do set "_NAME=%%~nA"
     
     :: rename
     ren "%LIB_DIR%\%_DL_NAME%" "%_NAME%"
@@ -1277,14 +1286,14 @@ exit /b 0
         exit /b 1
     )
     
-    set "PATH=%POTABLE_BUN_ROOT%;%PATH%"
+    set "PATH=%PORTABLE_BUN_ROOT%;%PATH%"
     
     :: ensure bunx exists (bun.exe x wrapper)
     call :CREATE_BUNX
     if ERRORLEVEL 1 exit /b 1
     
-    if "%POTABLE_BUN_REQUIREMENT_MODULES%" neq "" (
-        call %POTABLE_BUN_REQUIREMENT_MODULES%
+    if "%PORTABLE_BUN_REQUIREMENT_MODULES%" neq "" (
+        call %PORTABLE_BUN_REQUIREMENT_MODULES%
         if ERRORLEVEL 1 exit /b 1
     )
     
@@ -1294,18 +1303,18 @@ exit /b 0
 :CREATE_BUNX
     :: Create bunx.cmd next to bun.exe so `bunx ...` works on Windows.
     :: The official installer does this via `bun.exe completions` (see https://bun.com/install.ps1).
-    if "%POTABLE_BUN_ROOT%" equ "" exit /b 0
-    if not exist "%POTABLE_BUN_ROOT%\bun.exe" exit /b 0
-    if exist "%POTABLE_BUN_ROOT%\bunx.cmd" exit /b 0
+    if "%PORTABLE_BUN_ROOT%" equ "" exit /b 0
+    if not exist "%PORTABLE_BUN_ROOT%\bun.exe" exit /b 0
+    if exist "%PORTABLE_BUN_ROOT%\bunx.cmd" exit /b 0
 
     echo ##### creating bunx.cmd shim...
-    > "%POTABLE_BUN_ROOT%\bunx.cmd" (
+    > "%PORTABLE_BUN_ROOT%\bunx.cmd" (
         echo @echo off
         echo "%%~dp0bun.exe" x %%*
         echo exit /b %%ERRORLEVEL%%
     )
 
-    if not exist "%POTABLE_BUN_ROOT%\bunx.cmd" (
+    if not exist "%PORTABLE_BUN_ROOT%\bunx.cmd" (
         echo bunx.cmd create failed
         exit /b 1
     )
@@ -1318,22 +1327,22 @@ exit /b 0
 :ACTIVATE_SVN
     echo;
     echo ##### checking installed svn...
-    for %%A in ("%POTABLE_SVN_URL:/=" "%") do set "POTABLE_SVN_FILENAME=%%~nxA"
-    set POTABLE_SVN_DL=%LIB_DIR%\%POTABLE_SVN_FILENAME%
-    set POTABLE_SVN_ROOT=%LIB_DIR%\svn
+    for %%A in ("%PORTABLE_SVN_URL:/=" "%") do set "PORTABLE_SVN_FILENAME=%%~nxA"
+    set PORTABLE_SVN_DL=%LIB_DIR%\%PORTABLE_SVN_FILENAME%
+    set PORTABLE_SVN_ROOT=%LIB_DIR%\svn
 
-    :: check already installed potable svn
+    :: check already installed portable svn
     call :FIND_SYSTEM_EXE svn --version --quiet
     if ERRORLEVEL 1 (
-	    if not exist "%POTABLE_SVN_ROOT%\bin\svn.exe" (
+	    if not exist "%PORTABLE_SVN_ROOT%\bin\svn.exe" (
 	        echo svn is not installed
 
-	        :: install potable svn
+	        :: install portable svn
 	        call :INSTALL_SVN
 	        if ERRORLEVEL 1 exit /b 1
 	    )
-	    :: append potable svn path
-	    set "PATH=%POTABLE_SVN_ROOT%\bin;%PATH%"
+	    :: append portable svn path
+	    set "PATH=%PORTABLE_SVN_ROOT%\bin;%PATH%"
 
 	    :: output nodejs path and version
 	    call :WHERE_EXE svn --version --quiet
@@ -1344,24 +1353,24 @@ exit /b 0
 exit /b 0
 
 :INSTALL_SVN
-    echo ##### downloading potable svn...
-    curl -L %POTABLE_SVN_URL% -o "%POTABLE_SVN_DL%"
+    echo ##### downloading portable svn...
+    curl -L %PORTABLE_SVN_URL% -o "%PORTABLE_SVN_DL%"
     if ERRORLEVEL 1 (
-        echo %POTABLE_SVN_URL% download failed
+        echo %PORTABLE_SVN_URL% download failed
         exit /b 1
     )
-    echo ##### installing potable svn...
+    echo ##### installing portable svn...
     :: unzip
-    powershell -Command "Expand-Archive -Path '%POTABLE_SVN_DL%' -DestinationPath '%POTABLE_SVN_ROOT%'"
+    powershell -Command "Expand-Archive -Path '%PORTABLE_SVN_DL%' -DestinationPath '%PORTABLE_SVN_ROOT%'"
     if ERRORLEVEL 1 (
-        echo %POTABLE_SVN_DL% unzip failed
+        echo %PORTABLE_SVN_DL% unzip failed
         exit /b 1
     )
 
     :: delete dl file
-	del "%POTABLE_SVN_DL%"
+	del "%PORTABLE_SVN_DL%"
     if ERRORLEVEL 1 (
-        echo %POTABLE_SVN_DL% delete failed
+        echo %PORTABLE_SVN_DL% delete failed
         exit /b 1
     )
     
